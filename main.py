@@ -3,124 +3,18 @@ from dataclasses import dataclass, field
 from typing import Iterable, Mapping, NewType
 from typing_extensions import Self
 from itertools import chain
-from enum import Enum
 
+from pitch import Interval, Octave
+from note import (
+    Note,
+    NoteName,
+    Accidental,
+    MusicalPitch,
+    closest_sharp,
+    sharp_notes,
+    flat_notes,
+)
 
-class NoteName(Enum):
-    """Western pitch class names"""
-
-    C = 0
-    D = 2
-    E = 4
-    F = 5
-    G = 7
-    A = 9
-    B = 11
-
-
-__note_name_values__: set[int] = set(map(lambda n: n.value, NoteName))
-
-
-class Accidental(Enum):
-    DoubleFlat = -2
-    Flat = -1
-    Natural = 0
-    Sharp = 1
-    DoubleSharp = 2
-
-
-Interval = NewType("Interval", int)
-"""A musical interval between two pitches, in terms of half-steps (semitones)"""
-
-
-@dataclass(frozen=True, init=False)
-class OctavePitch:
-    """Number of half-steps from C in a single octave. A pitch class as a number."""
-
-    half_steps: int
-
-    def __init__(self: Self, _half_steps: int):
-        object.__setattr__(self, "half_steps", _half_steps % 12)
-
-    def __add__(self: Self, interval: Interval) -> OctavePitch:
-        return OctavePitch(self.half_steps + interval)
-
-    def __sub__(self: Self, interval: Interval) -> OctavePitch:
-        return OctavePitch(self.half_steps - interval)
-
-
-Octave = NewType("Octave", int)
-"""Which octave a particular note sits in"""
-
-
-@dataclass(frozen=True)
-class Pitch:
-    """A pitch relative to some tuning system (e.g. A440). Defined in terms of
-    half-steps away from C0 in a tuning system"""
-
-    half_steps: int
-
-    def __add__(self: Self, interval: Interval) -> Pitch:
-        return Pitch(self.half_steps + interval)
-
-    def __sub__(self: Self, interval: Interval) -> Pitch:
-        return Pitch(self.half_steps - interval)
-
-
-@dataclass
-class Note:
-    """A named pitch class - a note regardless of its octave"""
-
-    name: NoteName
-    accidental: Accidental = field(default=Accidental.Natural)
-
-    def to_octave_pitch(self: Self) -> OctavePitch:
-        """Number of half-steps above C"""
-        return OctavePitch(self.name.value + self.accidental.value)
-
-    def __repr__(self: Self) -> str:
-        if self.accidental.value > 0:
-            accidentals = self.accidental.value * "#"
-        else:
-            accidentals = (-self.accidental.value) * "b"
-        return f"{self.name.name}{accidentals}"
-
-
-def closest_sharp(octave_pitch: OctavePitch) -> Note:
-    if octave_pitch.half_steps in __note_name_values__:
-        return Note(NoteName(octave_pitch.half_steps), Accidental.Natural)
-    else:
-        return Note(NoteName(octave_pitch.half_steps - 1), Accidental.Sharp)
-
-
-def closest_flat(octave_pitch: OctavePitch) -> Note:
-    if octave_pitch.half_steps in __note_name_values__:
-        return Note(NoteName(octave_pitch.half_steps), Accidental.Natural)
-    else:
-        return Note(NoteName(octave_pitch.half_steps + 1), Accidental.Flat)
-
-
-sharp_notes = tuple(map(closest_sharp, map(OctavePitch, range(0, 12))))
-flat_notes = tuple(map(closest_flat, map(OctavePitch, range(0, 12))))
-
-
-@dataclass
-class MusicalPitch:
-    """A pitch that is a specific note in a harmonic context (e.g. B sharp)"""
-
-    note: Note
-    octave: Octave
-
-    def to_pitch(self: Self) -> Pitch:
-        return Pitch(
-            self.note.name.value + self.note.accidental.value + self.octave * 12
-        )
-
-    def __repr__(self: Self) -> str:
-        return f"{self.note}{self.octave}"
-
-
-# TODO: harmonic pitch?
 
 IntervalSequence = NewType("IntervalSequence", tuple[Interval, ...])
 """A sequence of "gaps" between successive notes"""
