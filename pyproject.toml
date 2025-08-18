@@ -1,9 +1,19 @@
 [project]
-name = "music-tools"
+name = "music_tools"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
+# packages = [
+#     { include = "music_tools", from = "src" }
+# ]
 dependencies = [
     "typing-extensions>=4.14.1",
 ]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["uv_build>=0.8.19,<0.9.0"]
+build-backend = "uv_build"

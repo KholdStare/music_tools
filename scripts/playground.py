@@ -1,5 +1,5 @@
-from pitch import Interval, Octave
-from note import (
+from music_tools.pitch import Interval, Octave
+from music_tools.note import (
     Note,
     NoteName,
     Accidental,
@@ -8,10 +8,9 @@ from note import (
     sharp_notes,
     flat_notes,
 )
-from scale import gen_conventional_scales, scale_with_root, name_to_scale
+from music_tools.scale import gen_conventional_scales, scale_with_root, name_to_scale
 
 # TODO: categorize each generated scale as mode of some parent scale
-
 
 def main():
     a4 = MusicalPitch(Note(NoteName.A, Accidental.Natural), Octave(4))

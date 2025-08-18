@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing_extensions import Self
 from enum import Enum
 
-from pitch import Pitch, OctavePitch, Octave
+from .pitch import Pitch, OctavePitch, Octave
 
 
 class NoteName(Enum):

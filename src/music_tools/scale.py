@@ -4,8 +4,8 @@ from itertools import chain
 from typing import Iterable, Mapping, NewType
 from typing_extensions import Self
 
-from pitch import Interval, Octave
-from note import (
+from .pitch import Interval, Octave
+from .note import (
     Note,
     closest_sharp,
 )
@@ -77,6 +77,13 @@ class _ScaleFragment:
 
 # TODO: write tests
 # TODO: re-write using generator rules
+
+# Insight! Any two adjacent intervals must add up to minor or major third (3 or 4 half-steps)
+possible_transitions: Mapping[int, list[list[int]]] = {
+    1: [[2], [3]],
+    2: [[1], [2]],
+    3: [[1]],
+}
 
 
 def gen_scale_fragment_extensions(fragment: _ScaleFragment) -> Iterable[_ScaleFragment]:
