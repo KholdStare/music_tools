@@ -1,2 +1,5 @@
 {
+    "mypy-type-checker.path": [
+        "[\"uv\", \"run\", \"mypy\"]"
+    ]
 }

@@ -4,7 +4,7 @@ from itertools import chain
 from typing import Iterable, Mapping, NewType
 from typing_extensions import Self
 
-from .pitch import Interval, Octave
+from .pitch import Interval
 from .note import (
     Note,
     closest_sharp,

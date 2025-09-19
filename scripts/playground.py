@@ -1,10 +1,9 @@
-from music_tools.pitch import Interval, Octave
+from music_tools.pitch import Octave
 from music_tools.note import (
     Note,
     NoteName,
     Accidental,
     MusicalPitch,
-    closest_sharp,
     sharp_notes,
     flat_notes,
 )

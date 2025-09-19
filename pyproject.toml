@@ -11,6 +11,18 @@ dependencies = [
     "typing-extensions>=4.14.1",
 ]
 
+[dependency-groups]
+dev = [
+  {include-group = "lint"},
+  {include-group = "test"}
+]
+lint = [
+  "ruff", "mypy"
+]
+test = [
+  "pytest"
+]
+
 [tool.uv]
 package = true
 
