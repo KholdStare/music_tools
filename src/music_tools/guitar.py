@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Callable, Iterable, NewType, TypeVar
+from parsy import string  # type: ignore
 
-from music_tools.note import MusicalPitch, Note, NoteName, closest_sharp
-from music_tools.pitch import HALF_STEP, Octave, Pitch
+from music_tools.note import (
+    closest_sharp,
+    musical_pitch_parser,
+)
+from music_tools.pitch import HALF_STEP, Pitch
 
 
 @dataclass
@@ -35,6 +41,19 @@ StringIndex = NewType("StringIndex", int)
 class Fretboard:
     strings: list[String]
 
+    @staticmethod
+    def from_tuning(tuning: str) -> Fretboard:
+        """Given a string like 'E3 A4 D4 G5 B6 E6' creates a fretboard with that
+        tuning. Note lowest string first"""
+        return Fretboard(
+            reversed(
+                list(
+                    String(p.to_pitch())
+                    for p in musical_pitch_parser.sep_by(string(" ")).parse(tuning)
+                )
+            )
+        )
+
 
 StringVisitor = Callable[[Fretboard, String, StringIndex], T]
 """A callback that receives the fretboard, the string, and its index"""
@@ -43,23 +62,11 @@ StringVisitor = Callable[[Fretboard, String, StringIndex], T]
 def visit_fretboard(fretboard: Fretboard, visitor: StringVisitor) -> Iterable[T]:
     """Visit every string on a guitar, starting on first string, and going to the thicker strings"""
 
-    for i, string in enumerate(fretboard.strings, 1):
-        yield visitor(fretboard, string, StringIndex(i))
+    for i, s in enumerate(fretboard.strings, 1):
+        yield visitor(fretboard, s, StringIndex(i))
 
 
-# TODO: create fretboard from tuning
-# TODO: parse from string
-
-EADGBE = Fretboard(
-    [
-        String(MusicalPitch(Note(NoteName.E), Octave(6)).to_pitch()),
-        String(MusicalPitch(Note(NoteName.B), Octave(6)).to_pitch()),
-        String(MusicalPitch(Note(NoteName.G), Octave(5)).to_pitch()),
-        String(MusicalPitch(Note(NoteName.D), Octave(4)).to_pitch()),
-        String(MusicalPitch(Note(NoteName.A), Octave(4)).to_pitch()),
-        String(MusicalPitch(Note(NoteName.E), Octave(3)).to_pitch()),
-    ]
-)
+EADGBE = Fretboard.from_tuning("E3 A4 D4 G5 B6 E6")
 
 # TODO: change width of fret depending how far it is
 

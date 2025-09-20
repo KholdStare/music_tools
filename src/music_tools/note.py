@@ -1,7 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from typing import Callable
 from typing_extensions import Self
 from enum import Enum
+from parsy import char_from, regex, seq  # type: ignore
 
 from .pitch import Pitch, OctavePitch, Octave
 
@@ -19,6 +21,7 @@ class NoteName(Enum):
 
 
 __note_name_values__: set[int] = set(map(lambda n: n.value, NoteName))
+__note_name_keys__: set[str] = set(map(lambda n: n.name, NoteName))
 
 
 class Accidental(Enum):
@@ -48,6 +51,11 @@ class Note:
         return f"{self.name.name}{accidentals}"
 
 
+PitchToNote = Callable[[OctavePitch], Note]
+"""A way to map from a pitch within an octave to a Note. This can be in the
+context of some key"""
+
+
 def closest_sharp(octave_pitch: OctavePitch) -> Note:
     if octave_pitch.half_steps in __note_name_values__:
         return Note(NoteName(octave_pitch.half_steps), Accidental.Natural)
@@ -68,7 +76,7 @@ flat_notes = tuple(map(closest_flat, map(OctavePitch, range(0, 12))))
 
 @dataclass
 class MusicalPitch:
-    """A pitch that is a specific note in a harmonic context (e.g. B sharp)"""
+    """A pitch that is a specific note in a harmonic context (e.g. B sharp 4)"""
 
     note: Note
     octave: Octave
@@ -78,8 +86,36 @@ class MusicalPitch:
             self.note.name.value + self.note.accidental.value + self.octave * 12
         )
 
+    @staticmethod
+    def from_pitch(
+        pitch: Pitch, pitch_to_note: PitchToNote = closest_sharp
+    ) -> MusicalPitch:
+        octave, octave_pitch = pitch.to_octave()
+        return MusicalPitch(pitch_to_note(octave_pitch), octave)
+
     def __repr__(self: Self) -> str:
         return f"{self.note}{self.octave}"
 
 
-# TODO: harmonic pitch?
+note_name_parser = char_from("".join(__note_name_keys__)).map(
+    lambda name: NoteName[name]
+)
+
+
+def _chars_to_accidental(chars: list[str]) -> Accidental:
+    value = 0
+    for char in chars:
+        if char == "b":
+            value -= 1
+        elif char == "#":
+            value += 1
+    return Accidental(value)
+
+
+accidental_parser = char_from("b#").at_most(2).map(_chars_to_accidental)
+
+note_parser = seq(note_name_parser, accidental_parser).combine(Note)
+
+octave_parser = regex(r"[0-9]+").map(lambda i: Octave(int(i)))
+
+musical_pitch_parser = seq(note_parser, octave_parser).combine(MusicalPitch)
