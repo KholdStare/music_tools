@@ -1,5 +1,8 @@
 {
     "mypy-type-checker.path": [
         "[\"uv\", \"run\", \"mypy\"]"
-    ]
+    ],
+    "[python]": {
+        "editor.formatOnSave": true,
+    }
 }

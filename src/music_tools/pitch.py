@@ -44,3 +44,12 @@ class Pitch:
     @staticmethod
     def from_octave(octave: Octave, pitch: OctavePitch) -> Pitch:
         return Pitch((octave * 12) + pitch.half_steps)
+
+    def to_octave(self: Self) -> tuple[Octave, OctavePitch]:
+        octave = Octave(self.half_steps // 12)
+        octave_pitch = OctavePitch(self.half_steps)
+        return (octave, octave_pitch)
+
+
+HALF_STEP = Interval(1)
+WHOLE_STEP = Interval(2)
