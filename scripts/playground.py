@@ -1,4 +1,4 @@
-from music_tools.guitar import EADGBE, fretboard_to_ascii
+from music_tools.guitar import EADGBE, render_fretboard_ascii
 from music_tools.pitch import Octave
 from music_tools.note import (
     Note,
@@ -27,7 +27,7 @@ def main():
     for scale in all_scales:
         print(scale_with_root(Note(NoteName.C), scale))
 
-    print(fretboard_to_ascii(EADGBE, 12))
+    print(render_fretboard_ascii(EADGBE, 12))
 
 
 if __name__ == "__main__":

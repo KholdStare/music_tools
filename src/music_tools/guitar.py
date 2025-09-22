@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import chain
 from typing import Callable, Iterable, NewType, TypeVar
-from parsy import string  # type: ignore
+import parsy  # type: ignore
 
 from music_tools.note import (
     closest_sharp,
@@ -37,9 +38,13 @@ StringIndex = NewType("StringIndex", int)
 """String index on a guitar. 1-based, where 1 is the first (thinnest) string and so on"""
 
 
+# TODO: use this instead?
+Tuning = tuple[Pitch, ...]
+
+
 @dataclass
 class Fretboard:
-    strings: list[String]
+    strings: Iterable[String]
 
     @staticmethod
     def from_tuning(tuning: str) -> Fretboard:
@@ -49,10 +54,24 @@ class Fretboard:
             reversed(
                 list(
                     String(p.to_pitch())
-                    for p in musical_pitch_parser.sep_by(string(" ")).parse(tuning)
+                    for p in musical_pitch_parser.sep_by(parsy.string(" ")).parse(
+                        tuning
+                    )
                 )
             )
         )
+
+
+T_co = TypeVar("T_co", covariant=True)
+
+
+FretboardAnnotation = Callable[[tuple[StringIndex, FretIndex]], T_co | None]
+# class FretboardAnnotation(Protocol[T_co]):
+#     def __call__(self, loc: tuple[StringIndex, FretIndex]) -> T_co | None: ...
+
+
+def _null_annotation(loc: tuple[StringIndex, FretIndex]) -> None:
+    return None
 
 
 StringVisitor = Callable[[Fretboard, String, StringIndex], T]
@@ -70,18 +89,40 @@ EADGBE = Fretboard.from_tuning("E3 A4 D4 G5 B6 E6")
 
 # TODO: change width of fret depending how far it is
 
+MARKED_FRETS = [1, 3, 5, 7, 9, 12, 15, 17, 19, 21, 24]
+"""Frets typically marked on a fretboard"""
 
-def fretboard_to_ascii(fretboard: Fretboard, frets: int) -> str:
-    def fret_visitor(_string: String, pitch: Pitch, index: FretIndex) -> str:
-        if index == 0:
-            _, octave_pitch = pitch.to_octave()
-            return str(closest_sharp(octave_pitch)) + " |"
-        else:
-            return "---|"
 
+def _make_fret_footer(frets: int) -> str:
+    fret_set = set(filter(lambda f: f <= frets, MARKED_FRETS))
+
+    fret_markers = (
+        str(fret).ljust(2) if fret in fret_set else "  " for fret in range(1, frets + 1)
+    )
+
+    return "     " + "  ".join(fret_markers)
+
+
+def render_fretboard_ascii(
+    fretboard: Fretboard,
+    frets: int,
+    annotation: FretboardAnnotation[str] = _null_annotation,
+) -> str:
     def string_visitor(
-        _fretboard: Fretboard, string: String, _index: StringIndex
+        _fretboard: Fretboard, string: String, string_index: StringIndex
     ) -> str:
+        def fret_visitor(_string: String, pitch: Pitch, fret_index: FretIndex) -> str:
+            if fret_index == 0:
+                _, octave_pitch = pitch.to_octave()
+                return str(closest_sharp(octave_pitch)).ljust(2) + " |"
+
+            fret_annotation = annotation((string_index, fret_index)) or "-"
+            return f"--{fret_annotation[0]}|"
+
         return "".join(visit_string(string, frets, fret_visitor))
 
-    return "\n".join(visit_fretboard(fretboard, string_visitor))
+    all_strings: Iterable[str] = visit_fretboard(fretboard, string_visitor)
+
+    footer = _make_fret_footer(frets)
+
+    return "\n".join(chain((*all_strings, footer)))
