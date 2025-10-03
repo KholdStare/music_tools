@@ -100,37 +100,60 @@ MARKED_FRETS = [1, 3, 5, 7, 9, 12, 15, 17, 19, 21, 24]
 # TODO: change width of fret depending how far it is
 
 
-def _make_fret_footer(frets: int) -> str:
+def _make_fret_footer(frets: int, num_layers: int) -> str:
     fret_set = set(filter(lambda f: f <= frets, MARKED_FRETS))
 
+    width = max(num_layers, 3)
+    left_just = width - (width // 2)
+
     fret_markers = (
-        str(fret).ljust(2) if fret in fret_set else "  " for fret in range(1, frets + 1)
+        str(fret).ljust(left_just).rjust(width) if fret in fret_set else " " * width
+        for fret in range(1, frets + 1)
     )
 
-    return "       " + "  ".join(fret_markers)
+    return f"   {' ' * width} {' '.join(fret_markers)}"
 
 
 def render_fretboard_ascii(
     fretboard: Fretboard,
     frets: int,
-    annotation: FretboardAnnotation[str] = _null_annotation,
+    annotation_layers: list[FretboardAnnotation[str]] = [],
 ) -> str:
+    num_layers = len(annotation_layers)
+
     def string_visitor(
         _fretboard: Fretboard, string: String, string_index: StringIndex
     ) -> str:
         def fret_visitor(_string: String, pitch: Pitch, fret_index: FretIndex) -> str:
-            fret_annotation = annotation((string_index, fret_index, pitch))
+            padding = " " if fret_index == 0 else "-"
 
+            all_annotations = ""
+
+            # Prepend open string note annotation
             if fret_index == 0:
                 _, octave_pitch = pitch.to_octave()
-                return f"{str(closest_sharp(octave_pitch)).ljust(2)} {fret_annotation or ' '} |"
-            else:
-                return f"-{fret_annotation or '-'}-|"
+                all_annotations += f"{str(closest_sharp(octave_pitch)).ljust(2)} "
+
+            # Add any left padding
+            if num_layers < 3:
+                all_annotations += padding
+
+            # Add all annotation layers
+            for annotation in annotation_layers:
+                all_annotations += (
+                    annotation((string_index, fret_index, pitch)) or padding
+                )
+
+            # Add any right padding
+            if num_layers < 2:
+                all_annotations += padding
+
+            return f"{all_annotations}|"
 
         return "".join(visit_frets(string, frets, fret_visitor))
 
     all_strings: Iterable[str] = visit_strings(fretboard, string_visitor)
 
-    footer = _make_fret_footer(frets)
+    footer = _make_fret_footer(frets, num_layers)
 
     return "\n".join(chain((*all_strings, footer)))

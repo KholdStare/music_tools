@@ -5,6 +5,7 @@ from music_tools.guitar import (
     String,
     StringIndex,
     render_fretboard_ascii,
+    _null_annotation,
 )
 from music_tools.note import p
 
@@ -13,16 +14,32 @@ def test_ascii_example1():
     def annot(loc: FretboardLocation) -> str | None:
         return "O" if (loc[0], loc[1]) == (StringIndex(2), FretIndex(3)) else None
 
-    result = render_fretboard_ascii(EADGBE, 4, annot)
+    result = render_fretboard_ascii(EADGBE, 4, [annot])
 
     expected = """
-E    |---|---|---|---|
-B    |---|---|-O-|---|
-G    |---|---|---|---|
-D    |---|---|---|---|
-A    |---|---|---|---|
-E    |---|---|---|---|
-       1       3     
+E     |---|---|---|---|
+B     |---|---|-O-|---|
+G     |---|---|---|---|
+D     |---|---|---|---|
+A     |---|---|---|---|
+E     |---|---|---|---|
+        1       3     
+""".strip("\n")
+
+    assert result == expected
+
+
+def test_ascii_many_layers():
+    result = render_fretboard_ascii(EADGBE, 4, [_null_annotation for i in range(5)])
+
+    expected = """
+E       |-----|-----|-----|-----|
+B       |-----|-----|-----|-----|
+G       |-----|-----|-----|-----|
+D       |-----|-----|-----|-----|
+A       |-----|-----|-----|-----|
+E       |-----|-----|-----|-----|
+           1           3        
 """.strip("\n")
 
     assert result == expected

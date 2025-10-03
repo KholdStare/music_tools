@@ -85,7 +85,7 @@ def three_note_per_string(scale: ConcreteScale) -> FretboardAnnotation[str]:
 def main():
     c_maj_7 = major_7_annotation(note_parser.parse("C"))
 
-    print(render_fretboard_ascii(EADGBE, 24, c_maj_7))
+    print(render_fretboard_ascii(EADGBE, 24, [c_maj_7]))
 
     print()
 
@@ -93,7 +93,7 @@ def main():
 
     c_maj_scale = three_note_per_string(scale_with_root(n("C"), name_to_scale["Major"]))
 
-    print(render_fretboard_ascii(MEGA_FRETBOARD, 24, c_maj_scale))
+    print(render_fretboard_ascii(MEGA_FRETBOARD, 24, [c_maj_scale]))
 
 
 if __name__ == "__main__":
