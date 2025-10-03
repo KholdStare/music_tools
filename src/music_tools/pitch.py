@@ -4,8 +4,21 @@ from typing import NewType
 from typing_extensions import Self
 
 
-Interval = NewType("Interval", int)
-"""A musical interval between two pitches, in terms of half-steps (semitones)"""
+@dataclass(frozen=True)
+class Interval:
+    """A musical interval between two pitches, in terms of half-steps
+    (semitones)"""
+
+    half_steps: int
+
+    def __add__(self: Self, interval: Interval) -> Interval:
+        return Interval(self.half_steps + interval.half_steps)
+
+    def __sub__(self: Self, interval: Interval) -> Interval:
+        return Interval(self.half_steps - interval.half_steps)
+
+    def __mul__(self: Self, mult: int) -> Interval:
+        return Interval(self.half_steps * mult)
 
 
 @dataclass(frozen=True, init=False)
@@ -18,10 +31,10 @@ class OctavePitch:
         object.__setattr__(self, "half_steps", _half_steps % 12)
 
     def __add__(self: Self, interval: Interval) -> OctavePitch:
-        return OctavePitch(self.half_steps + interval)
+        return OctavePitch(self.half_steps + interval.half_steps)
 
     def __sub__(self: Self, interval: Interval) -> OctavePitch:
-        return OctavePitch(self.half_steps - interval)
+        return OctavePitch(self.half_steps - interval.half_steps)
 
 
 Octave = NewType("Octave", int)
@@ -36,10 +49,10 @@ class Pitch:
     half_steps: int
 
     def __add__(self: Self, interval: Interval) -> Pitch:
-        return Pitch(self.half_steps + interval)
+        return Pitch(self.half_steps + interval.half_steps)
 
     def __sub__(self: Self, interval: Interval) -> Pitch:
-        return Pitch(self.half_steps - interval)
+        return Pitch(self.half_steps - interval.half_steps)
 
     @staticmethod
     def from_octave(octave: Octave, pitch: OctavePitch) -> Pitch:
@@ -52,4 +65,18 @@ class Pitch:
 
 
 HALF_STEP = Interval(1)
+SEMITONE = HALF_STEP
+MINOR_SECOND = HALF_STEP
 WHOLE_STEP = Interval(2)
+MAJOR_SECOND = WHOLE_STEP
+MINOR_THIRD = Interval(3)
+MAJOR_THIRD = Interval(4)
+FOURTH = Interval(5)
+AUGMENTED_FOURTH = Interval(5)
+DIMINISHED_FIFTH = AUGMENTED_FOURTH
+FIFTH = Interval(7)
+MINOR_SIXTH = Interval(8)
+MAJOR_SIXTH = Interval(9)
+MINOR_SEVENTH = Interval(10)
+MAJOR_SEVENTH = Interval(11)
+OCTAVE = Interval(12)

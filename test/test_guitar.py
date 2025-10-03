@@ -1,9 +1,15 @@
-from music_tools.guitar import EADGBE, FretIndex, StringIndex, render_fretboard_ascii
+from music_tools.guitar import (
+    EADGBE,
+    FretIndex,
+    FretboardLocation,
+    StringIndex,
+    render_fretboard_ascii,
+)
 
 
 def test_ascii_example1():
-    def annot(loc: tuple[StringIndex, FretIndex]) -> str | None:
-        return "O" if loc == (StringIndex(2), FretIndex(3)) else None
+    def annot(loc: FretboardLocation) -> str | None:
+        return "O" if (loc[0], loc[1]) == (StringIndex(2), FretIndex(3)) else None
 
     result = render_fretboard_ascii(EADGBE, 4, annot)
 

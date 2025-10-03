@@ -27,11 +27,9 @@ Scale = NewType("Scale", tuple[Interval, ...])
 def scale_from_intervals(intervals: IntervalSequence) -> Scale:
     # TODO: ensure add up to 12 half-steps
     scale_intervals = [Interval(0)]
-    total = 0
     for interval in intervals:
-        scale_intervals.append(Interval(scale_intervals[-1] + interval))
-        total += interval
-    assert scale_intervals.pop() == 12, "Intervals must span an octave"
+        scale_intervals.append(scale_intervals[-1] + interval)
+    assert scale_intervals.pop() == Interval(12), "Intervals must span an octave"
     return Scale(tuple(scale_intervals))
 
 
