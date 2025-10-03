@@ -8,8 +8,9 @@ import parsy  # type: ignore
 from music_tools.note import (
     closest_sharp,
     musical_pitch_parser,
+    p,
 )
-from music_tools.pitch import FOURTH, HALF_STEP, Pitch
+from music_tools.pitch import FOURTH, HALF_STEP, Interval, Pitch
 
 
 T = TypeVar("T")
@@ -19,6 +20,9 @@ T_co = TypeVar("T_co", covariant=True)
 @dataclass
 class String:
     open_pitch: Pitch
+
+    def __getitem__(self, index: int) -> Pitch:
+        return self.open_pitch + Interval(index)
 
 
 FretIndex = NewType("FretIndex", int)
@@ -42,13 +46,13 @@ StringIndex = NewType("StringIndex", int)
 
 @dataclass
 class Fretboard:
-    strings: Iterable[String]
+    strings: list[String]
 
     @staticmethod
     def from_pitches(pitches: Iterable[Pitch]) -> Fretboard:
         """Given a string like 'E3 A4 D4 G5 B6 E6' creates a fretboard with that
         tuning. Note lowest string first"""
-        return Fretboard(reversed(list(map(String, pitches))))
+        return Fretboard(list(reversed(list(map(String, pitches)))))
 
     @staticmethod
     def from_tuning(tuning: str) -> Fretboard:
@@ -79,10 +83,10 @@ def _null_annotation(loc: tuple[StringIndex, FretIndex, Pitch]) -> None:
     return None
 
 
-EADGBE = Fretboard.from_tuning("E3 A4 D4 G5 B6 E6")
-DROP_A = Fretboard.from_tuning("A2 E3 A4 D4 G5 B6 E6")
+EADGBE = Fretboard.from_tuning("E4 A4 D5 G5 B5 E6")
+DROP_A = Fretboard.from_tuning("A3 E4 A4 D5 G5 B5 E6")
 MEGA_FRETBOARD = Fretboard.from_pitches(
-    musical_pitch_parser.parse("B2").to_pitch() + (FOURTH * i) for i in range(0, 12)
+    p("B2").to_pitch() + (FOURTH * i) for i in range(0, 12)
 )
 """Hypothetical fourths tuning fretboard starting with B as lowest string, and
 going through all the pitches (12 strings total). Useful to see regular patterns

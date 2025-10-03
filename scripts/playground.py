@@ -13,22 +13,38 @@ from music_tools.pitch import (
 )
 from music_tools.note import (
     Note,
+    n,
     note_parser,
 )
+from music_tools.scale import ConcreteScale, name_to_scale, scale_with_root
 
 # TODO: categorize each generated scale as mode of some parent scale
 
 
 class TermColor:
     HEADER = "\033[95m"
-    BLUE = "\033[94m"
-    CYAN = "\033[96m"
+    RED = "\033[91m"
     GREEN = "\033[92m"
     YELLOW = "\033[93m"
-    RED = "\033[91m"
+    ORANGE = "\033[38:5:214m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
     ENDC = "\033[0m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
+
+
+COLOR_GRADIENT = [
+    TermColor.BOLD,
+    TermColor.GREEN,
+    TermColor.CYAN,
+    TermColor.BLUE,
+    TermColor.MAGENTA,
+    TermColor.RED,
+    TermColor.ORANGE,
+    TermColor.YELLOW,
+]
 
 
 def major_7_annotation(root_note: Note) -> FretboardAnnotation[str]:
@@ -47,6 +63,25 @@ def major_7_annotation(root_note: Note) -> FretboardAnnotation[str]:
     return annotation
 
 
+def three_note_per_string(scale: ConcreteScale) -> FretboardAnnotation[str]:
+    octave_pitches = [n.to_octave_pitch() for n in scale]
+
+    def annotation(loc: FretboardLocation) -> str | None:
+        string, fret, pitch = loc
+        octave, octave_pitch = pitch.to_octave()
+        try:
+            # index inside the scale
+            index = octave_pitches.index(octave_pitch)
+            # overall note count across all octaves
+            count = octave * 7 + index
+            result = f"{COLOR_GRADIENT[count % 3]}{index + 1}{TermColor.ENDC}"
+            return result
+        except ValueError:
+            return None
+
+    return annotation
+
+
 def main():
     c_maj_7 = major_7_annotation(note_parser.parse("C"))
 
@@ -54,7 +89,11 @@ def main():
 
     print()
 
-    print(render_fretboard_ascii(MEGA_FRETBOARD, 24, c_maj_7))
+    # print(render_fretboard_ascii(MEGA_FRETBOARD, 24, c_maj_7))
+
+    c_maj_scale = three_note_per_string(scale_with_root(n("C"), name_to_scale["Major"]))
+
+    print(render_fretboard_ascii(MEGA_FRETBOARD, 24, c_maj_scale))
 
 
 if __name__ == "__main__":

@@ -119,3 +119,13 @@ note_parser = seq(note_name_parser, accidental_parser).combine(Note)
 octave_parser = regex(r"[0-9]+").map(lambda i: Octave(int(i)))
 
 musical_pitch_parser = seq(note_parser, octave_parser).combine(MusicalPitch)
+
+
+def n(text: str) -> Note:
+    """Shorthand to parse a note like "Bb"."""
+    return note_parser.parse(text)  # type: ignore
+
+
+def p(text: str) -> MusicalPitch:
+    """Shorthand to parse a musical pitch like "Bb4"."""
+    return musical_pitch_parser.parse(text)  # type: ignore

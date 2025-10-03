@@ -5,11 +5,11 @@ from music_tools.note import (
     Accidental,
     MusicalPitch,
     Note,
+    n,
     note_name_parser,
     NoteName,
     accidental_parser,
-    note_parser,
-    musical_pitch_parser,
+    p,
 )
 from parsy import ParseError  # type: ignore
 
@@ -45,15 +45,8 @@ def test_accidental_parser():
 
 
 def test_note_parser():
-    assert note_parser.parse("A#") == Note(NoteName.A, Accidental.Sharp)
+    assert n("A#") == Note(NoteName.A, Accidental.Sharp)
 
 
 def test_musical_pitch_parser():
-    assert musical_pitch_parser.parse("Bb4") == MusicalPitch(
-        Note(NoteName.B, Accidental.Flat), Octave(4)
-    )
-
-
-# def test_parser():
-#     result = note_name_parser.parse("E")
-#     assert result == NoteName.E
+    assert p("Bb4") == MusicalPitch(Note(NoteName.B, Accidental.Flat), Octave(4))
