@@ -45,9 +45,9 @@ class Note:
 
     def __repr__(self: Self) -> str:
         if self.accidental.value > 0:
-            accidentals = self.accidental.value * "#"
+            accidentals = self.accidental.value * "♯"
         else:
-            accidentals = (-self.accidental.value) * "b"
+            accidentals = (-self.accidental.value) * "♭"
         return f"{self.name.name}{accidentals}"
 
 

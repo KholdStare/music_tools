@@ -1,6 +1,7 @@
 from music_tools.guitar import (
     EADGBE,
     MEGA_FRETBOARD,
+    T,
     FretboardAnnotation,
     FretboardLocation,
     render_fretboard_ascii,
@@ -47,6 +48,19 @@ COLOR_GRADIENT = [
 ]
 
 
+# TODO: add more options, make them optional
+def focus_vertically(
+    annotation: FretboardAnnotation[T], *, start_note: Note, max_notes_per_string: int
+) -> FretboardAnnotation[T]:
+    # TODO:
+    # seen_per_string
+
+    def new_annotation(loc: FretboardLocation) -> T | None:
+        pass
+
+    return new_annotation
+
+
 def major_7_annotation(root_note: Note) -> FretboardAnnotation[str]:
     root: OctavePitch = root_note.to_octave_pitch()
     pitches: dict[OctavePitch, str] = {
@@ -63,8 +77,15 @@ def major_7_annotation(root_note: Note) -> FretboardAnnotation[str]:
     return annotation
 
 
-def three_note_per_string(scale: ConcreteScale) -> FretboardAnnotation[str]:
+# TODO: algorithmically determine "CAGED" shapes
+
+
+def n_note_per_string(
+    n_per_string: int, scale: ConcreteScale
+) -> FretboardAnnotation[str]:
     octave_pitches = [n.to_octave_pitch() for n in scale]
+
+    assert n_per_string <= 4, "Not for spider hands"
 
     def annotation(loc: FretboardLocation) -> str | None:
         string, fret, pitch = loc
@@ -91,7 +112,7 @@ def main():
 
     # print(render_fretboard_ascii(MEGA_FRETBOARD, 24, c_maj_7))
 
-    c_maj_scale = three_note_per_string(scale_with_root(n("C"), name_to_scale["Major"]))
+    c_maj_scale = n_note_per_string(3, scale_with_root(n("C"), name_to_scale["Major"]))
 
     print(render_fretboard_ascii(MEGA_FRETBOARD, 24, [c_maj_scale]))
 
