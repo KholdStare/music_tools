@@ -1,8 +1,9 @@
 {
     "mypy-type-checker.path": [
-        "[\"uv\", \"run\", \"mypy\"]"
+        "uv", "run", "mypy"
     ],
     "[python]": {
         "editor.formatOnSave": true,
-    }
+    },
+    "mypy-type-checker.importStrategy": "fromEnvironment"
 }
