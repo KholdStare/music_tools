@@ -9,8 +9,9 @@ from enum import Enum
 from typing import NewType
 
 from music_tools.note import Note
+from music_tools.scale import Scale
 
-from .pitch import Interval, OctavePitch
+from .pitch import OctavePitch
 
 
 class ToneQuality(Enum):
@@ -50,7 +51,7 @@ class ChordDescription:
     tensions: list[Tension]
 
 
-ChordIntervals = NewType("ChordIntervals", tuple[Interval, ...])
+ChordScale = Scale
 """Raw set of intervals that define a type of chord"""
 
 Chord = NewType("Chord", tuple[OctavePitch, ...])
@@ -58,6 +59,14 @@ Chord = NewType("Chord", tuple[OctavePitch, ...])
 # TODO: go from chord intervals to a description, e.g. m7b5
 
 
-def instantiate_chord(chord_intervals: ChordIntervals, root: Note) -> Chord:
+def instantiate_chord(chord_scale: ChordScale, root: Note) -> Chord:
     root_pitch = root.to_octave_pitch()
-    return Chord(tuple(*(root_pitch + interval for interval in chord_intervals)))
+    return Chord(tuple((root_pitch + interval for interval in chord_scale)))
+
+
+# TODO: overload for concrete scale
+def triads_in_scale(
+    scale: Scale, *, include_seven: bool = False
+) -> list[tuple[int, ChordScale]]:
+    pass
+    # for (i, interval)

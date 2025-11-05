@@ -10,7 +10,7 @@ from music_tools.guitar import (
 from music_tools.note import p
 
 
-def test_ascii_example1():
+def test_ascii_example1() -> None:
     def annot(loc: FretboardLocation) -> str | None:
         return "O" if (loc[0], loc[1]) == (StringIndex(2), FretIndex(3)) else None
 
@@ -29,7 +29,7 @@ E     |---|---|---|---|
     assert result == expected
 
 
-def test_ascii_many_layers():
+def test_ascii_many_layers() -> None:
     result = render_fretboard_ascii(EADGBE, 4, [_null_annotation for i in range(5)])
 
     expected = """
@@ -45,12 +45,12 @@ E       |-----|-----|-----|-----|
     assert result == expected
 
 
-def test_string():
+def test_string() -> None:
     s = String(p("B2").to_pitch())
     assert s[1] == p("C3").to_pitch()
 
 
-def test_standard_tuning():
+def test_standard_tuning() -> None:
     [high_e, b, g, d, a, low_e] = EADGBE.strings
 
     assert low_e[5] == a.open_pitch

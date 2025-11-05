@@ -1,7 +1,7 @@
 from music_tools.algorithms import SubsequenceSearcher
 
 
-def test_minor_pentatonic_in_major():
+def test_minor_pentatonic_in_major() -> None:
     # major scale
     seq = (2, 2, 1, 2, 2, 2, 1)
 

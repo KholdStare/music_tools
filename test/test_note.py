@@ -14,7 +14,7 @@ from music_tools.note import (
 from parsy import ParseError  # type: ignore
 
 
-def test_note_name_parser():
+def test_note_name_parser() -> None:
     assert note_name_parser.parse("A") == NoteName.A
     assert note_name_parser.parse("B") == NoteName.B
     assert note_name_parser.parse("C") == NoteName.C
@@ -27,7 +27,7 @@ def test_note_name_parser():
         note_name_parser.parse("X")
 
 
-def test_accidental_parser():
+def test_accidental_parser() -> None:
     assert accidental_parser.parse("bb") == Accidental.DoubleFlat
     assert accidental_parser.parse("b") == Accidental.Flat
     assert accidental_parser.parse("") == Accidental.Natural
@@ -44,9 +44,9 @@ def test_accidental_parser():
         accidental_parser.parse("#b#")
 
 
-def test_note_parser():
+def test_note_parser() -> None:
     assert n("A#") == Note(NoteName.A, Accidental.Sharp)
 
 
-def test_musical_pitch_parser():
+def test_musical_pitch_parser() -> None:
     assert p("Bb4") == MusicalPitch(Note(NoteName.B, Accidental.Flat), Octave(4))

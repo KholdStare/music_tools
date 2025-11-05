@@ -14,7 +14,7 @@ IntervalSequence = NewType("IntervalSequence", list[Interval])
 """A sequence of "gaps" between successive notes"""
 
 
-def interval_sequence(raw_intervals: list[int]) -> IntervalSequence:
+def interval_sequence(raw_intervals: Iterable[int]) -> IntervalSequence:
     return IntervalSequence(list(map(Interval, raw_intervals)))
 
 
@@ -25,12 +25,18 @@ Scale = NewType("Scale", tuple[Interval, ...])
 
 
 def scale_from_intervals(intervals: IntervalSequence) -> Scale:
-    # TODO: ensure add up to 12 half-steps
-    scale_intervals = [Interval(0)]
+    scale_intervals: set[Interval] = {Interval(0)}
+    last_interval = Interval(0)
     for interval in intervals:
-        scale_intervals.append(scale_intervals[-1] + interval)
-    assert scale_intervals.pop() == Interval(12), "Intervals must span an octave"
-    return Scale(tuple(scale_intervals))
+        last_interval = (last_interval + interval).inside_octave()
+        scale_intervals.add(last_interval)
+    return Scale(tuple(sorted(scale_intervals, key=lambda x: x.half_steps)))
+
+
+def intervals_from_scale(scale: Scale) -> IntervalSequence:
+    _head, *tail = scale
+    intervals = [cur - prev for cur, prev in zip(tail, scale)]
+    return IntervalSequence(intervals)
 
 
 name_to_scale: Mapping[str, Scale] = dict(

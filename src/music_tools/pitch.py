@@ -11,6 +11,9 @@ class Interval:
 
     half_steps: int
 
+    def inside_octave(self) -> Interval:
+        return Interval(self.half_steps % 12)
+
     def __add__(self: Self, interval: Interval) -> Interval:
         return Interval(self.half_steps + interval.half_steps)
 
@@ -64,6 +67,7 @@ class Pitch:
         return (octave, octave_pitch)
 
 
+UNISON = Interval(0)
 HALF_STEP = Interval(1)
 SEMITONE = HALF_STEP
 MINOR_SECOND = HALF_STEP
@@ -72,11 +76,12 @@ MAJOR_SECOND = WHOLE_STEP
 MINOR_THIRD = Interval(3)
 MAJOR_THIRD = Interval(4)
 FOURTH = Interval(5)
-AUGMENTED_FOURTH = Interval(5)
+AUGMENTED_FOURTH = Interval(6)
 DIMINISHED_FIFTH = AUGMENTED_FOURTH
 FIFTH = Interval(7)
 MINOR_SIXTH = Interval(8)
 MAJOR_SIXTH = Interval(9)
+DIMINISHED_SEVENTH = MAJOR_SIXTH
 MINOR_SEVENTH = Interval(10)
 MAJOR_SEVENTH = Interval(11)
 OCTAVE = Interval(12)

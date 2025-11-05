@@ -103,7 +103,7 @@ def n_note_per_string(
     return annotation
 
 
-def main():
+def main() -> None:
     c_maj_7 = major_7_annotation(note_parser.parse("C"))
 
     print(render_fretboard_ascii(EADGBE, 24, [c_maj_7]))
