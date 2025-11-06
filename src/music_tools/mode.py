@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from typing import TypeVar
-from music_tools.pitch import OCTAVE
-from music_tools.scale import Scale
+from .pitch import OCTAVE
+from .scale import Scale, name_to_scale
 
 
 def next_mode(scale: Scale) -> Scale:
@@ -31,3 +31,11 @@ def scale_modes(scale: Scale) -> Iterable[Scale]:
 
         yield scale
         scale = next_mode(scale)
+
+
+major_scale_modes_by_name: dict[str, Scale] = dict(
+    zip(
+        ("Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"),
+        scale_modes(name_to_scale["Major"]),
+    )
+)

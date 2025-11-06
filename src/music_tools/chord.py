@@ -4,13 +4,14 @@
 # ° ∅
 # ♭ ♯ ♮
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from typing import NewType
 
-from music_tools.note import Note
-from music_tools.scale import Scale
-
+from .mode import scale_modes
+from .note import Note
+from .scale import Scale
 from .pitch import OctavePitch
 
 
@@ -64,9 +65,15 @@ def instantiate_chord(chord_scale: ChordScale, root: Note) -> Chord:
     return Chord(tuple((root_pitch + interval for interval in chord_scale)))
 
 
+# TODO: extract subset from scale and use below
+
+
 # TODO: overload for concrete scale
-def triads_in_scale(
+def chords_in_scale(
     scale: Scale, *, include_seven: bool = False
-) -> list[tuple[int, ChordScale]]:
-    pass
-    # for (i, interval)
+) -> Iterable[ChordScale]:
+    for i, mode in enumerate(scale_modes(scale)):
+        chord = (mode[0], mode[2], mode[4])
+        if include_seven:
+            chord + (mode[6],)
+        yield ChordScale(chord)

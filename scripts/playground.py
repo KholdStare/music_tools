@@ -18,6 +18,7 @@ from music_tools.note import (
     note_parser,
 )
 from music_tools.scale import ConcreteScale, name_to_scale, scale_with_root
+from music_tools.mode import major_scale_modes_by_name
 
 # TODO: categorize each generated scale as mode of some parent scale
 
@@ -112,9 +113,11 @@ def main() -> None:
 
     # print(render_fretboard_ascii(MEGA_FRETBOARD, 24, c_maj_7))
 
-    c_maj_scale = n_note_per_string(3, scale_with_root(n("C"), name_to_scale["Major"]))
+    # c_maj_scale = n_note_per_string(3, scale_with_root(n("C"), name_to_scale["Major"]))
 
-    print(render_fretboard_ascii(MEGA_FRETBOARD, 24, [c_maj_scale]))
+    # print(render_fretboard_ascii(MEGA_FRETBOARD, 24, [c_maj_scale]))
+
+    print(major_scale_modes_by_name)
 
 
 if __name__ == "__main__":
