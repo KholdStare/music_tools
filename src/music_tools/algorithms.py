@@ -22,7 +22,7 @@ class SubsequenceSearcher(Generic[S]):
     def __init__(self, parent_sequence: Iterable[S]):
         sequence_list = list(parent_sequence)
         sequence_length = len(sequence_list)
-        sequence_sum = sum(sequence_list)
+        sequence_sum = sum(sequence_list)  # type: ignore
 
         # The parent sequence is circular, and the sequence is made of distances
         # to the next element

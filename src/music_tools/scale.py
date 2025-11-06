@@ -4,7 +4,7 @@ from itertools import chain
 from typing import Iterable, Mapping, NewType
 from typing_extensions import Self
 
-from .pitch import Interval
+from .pitch import OCTAVE, Interval
 from .note import (
     Note,
     closest_sharp,
@@ -56,6 +56,7 @@ name_to_scale: Mapping[str, Scale] = dict(
 scale_to_name: Mapping[Scale, str] = dict(
     (kv[1], kv[0]) for kv in name_to_scale.items()
 )
+
 
 # TODO: better name?
 ConcreteScale = NewType("ConcreteScale", tuple[Note, ...])
