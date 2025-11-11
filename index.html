@@ -83,29 +83,11 @@
     <!-- TODO unhardcode -->
 
     <fret-board>
+        <!-- Fretboard is generated from a json specification. Below is an example of one -->
         <!-- <string>
                 <nut></nut>
                 <fret></fret>
-                <fret></fret>
-                <fret></fret>
-                <fret></fret>
                 <fret><annot>A</annot></fret>
-            </string>
-            <string>
-                <nut><annot>B</annot></nut>
-                <fret></fret>
-                <fret></fret>
-                <fret></fret>
-                <fret></fret>
-                <fret></fret>
-            </string>
-            <string>
-                <nut></nut>
-                <fret></fret>
-                <fret></fret>
-                <fret></fret>
-                <fret><annot>Db</annot></fret>
-                <fret></fret>
             </string> -->
     </fret-board>
     <script>
@@ -135,10 +117,17 @@
             // stringElem.appendChild(document.createElement("label")).appendChild(document.createTextNode(stringNote));
             stringElem.appendChild(document.createElement("label")).textContent = stringNote;
 
-            stringElem.appendChild(document.createElement("nut")).setAttribute("data-fret-index", "0");
+            const nutElem = stringElem.appendChild(document.createElement("nut"));
+            nutElem.setAttribute("data-fret-index", "0");
+            // use css variables to allow calculating fret spacing
+            // see https://css-tricks.com/a-complete-guide-to-calc-in-css/
+            nutElem.setAttribute("style", "--fret-index: 0;");
 
             for (let j = 0; j < fretboardData.totalFrets; j++) {
-                stringElem.appendChild(document.createElement("fret")).setAttribute("data-fret-index", (j + 1).toString());
+                const fretElem = stringElem.appendChild(document.createElement("fret"))
+                const fretIndex = (j + 1).toString();
+                fretElem.setAttribute("data-fret-index", fretIndex);
+                fretElem.setAttribute("style", `--fret-index: ${fretIndex};`);
             }
         }
 

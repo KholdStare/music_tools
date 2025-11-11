@@ -4,9 +4,6 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-# packages = [
-#     { include = "music_tools", from = "src" }
-# ]
 dependencies = [
     "parsy>=2.2",
     "typing-extensions>=4.14.1",
