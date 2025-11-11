@@ -4,7 +4,7 @@ from typing import NewType
 from typing_extensions import Self
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Interval:
     """A musical interval between two pitches, in terms of half-steps
     (semitones)"""
@@ -13,6 +13,15 @@ class Interval:
 
     def inside_octave(self) -> Interval:
         return Interval(self.half_steps % 12)
+
+    def scale_degree_repr(self, degree: int) -> str:
+        """Representation of interval as a scale degree. E.g. #2 vs b3"""
+        distance = self.half_steps - _natural_intervals[degree % 7].half_steps
+        if distance > 0:
+            accidentals = distance * "♯"
+        else:
+            accidentals = (-distance) * "♭"
+        return f"{accidentals}{degree + 1}"
 
     def __add__(self: Self, interval: Interval) -> Interval:
         return Interval(self.half_steps + interval.half_steps)
@@ -24,7 +33,7 @@ class Interval:
         return Interval(self.half_steps * mult)
 
 
-@dataclass(frozen=True, init=False)
+@dataclass(frozen=True, init=False, order=True)
 class OctavePitch:
     """Number of half-steps from C in a single octave. A pitch class as a number."""
 
@@ -85,3 +94,13 @@ DIMINISHED_SEVENTH = MAJOR_SIXTH
 MINOR_SEVENTH = Interval(10)
 MAJOR_SEVENTH = Interval(11)
 OCTAVE = Interval(12)
+
+_natural_intervals = (
+    UNISON,
+    MAJOR_SECOND,
+    MAJOR_THIRD,
+    FOURTH,
+    FIFTH,
+    MAJOR_SIXTH,
+    MAJOR_SEVENTH,
+)

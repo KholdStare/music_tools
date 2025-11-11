@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from collections.abc import Iterable
 from typing import TypeVar
 from .pitch import OCTAVE
@@ -33,7 +34,7 @@ def scale_modes(scale: Scale) -> Iterable[Scale]:
         scale = next_mode(scale)
 
 
-major_scale_modes_by_name: dict[str, Scale] = dict(
+major_scale_modes_by_name: OrderedDict[str, Scale] = OrderedDict(
     zip(
         ("Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian"),
         scale_modes(name_to_scale["Major"]),

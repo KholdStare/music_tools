@@ -18,8 +18,15 @@ def interval_sequence(raw_intervals: Iterable[int]) -> IntervalSequence:
     return IntervalSequence(list(map(Interval, raw_intervals)))
 
 
-Scale = NewType("Scale", tuple[Interval, ...])
-"""A scale is a sequence of Intervals relative to a root pitch."""
+class Scale(tuple[Interval, ...]):
+    """A scale is a sequence of Intervals relative to a root pitch."""
+
+    def __repr__(self) -> str:
+        intervals = " ".join(
+            interval.scale_degree_repr(degree) for degree, interval in enumerate(self)
+        )
+        return f"({intervals})"
+
 
 # TODO: pick note names based on harmony
 

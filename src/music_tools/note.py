@@ -32,7 +32,7 @@ class Accidental(Enum):
     DoubleSharp = 2
 
 
-@dataclass
+@dataclass(frozen=True)
 class Note:
     """A named pitch class - a note regardless of its octave"""
 
@@ -42,6 +42,14 @@ class Note:
     def to_octave_pitch(self: Self) -> OctavePitch:
         """Number of half-steps above C"""
         return OctavePitch(self.name.value + self.accidental.value)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Note):
+            return self.to_octave_pitch() == other.to_octave_pitch()
+        return False
+
+    def __lt__(self, value: Note) -> bool:
+        return self.to_octave_pitch() < value.to_octave_pitch()
 
     def __repr__(self: Self) -> str:
         if self.accidental.value > 0:

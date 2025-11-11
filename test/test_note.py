@@ -1,4 +1,4 @@
-from music_tools.pitch import Octave
+from music_tools.pitch import MAJOR_SECOND, MINOR_SECOND, MINOR_THIRD, UNISON, Octave
 import pytest
 
 from music_tools.note import (
@@ -50,3 +50,10 @@ def test_note_parser() -> None:
 
 def test_musical_pitch_parser() -> None:
     assert p("Bb4") == MusicalPitch(Note(NoteName.B, Accidental.Flat), Octave(4))
+
+
+def test_interval_repr() -> None:
+    assert UNISON.scale_degree_repr(0) == "1"
+    assert MINOR_SECOND.scale_degree_repr(1) == "♭2"
+    assert MAJOR_SECOND.scale_degree_repr(8) == "9"
+    assert MINOR_THIRD.scale_degree_repr(1) == "♯2"
