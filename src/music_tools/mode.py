@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from collections.abc import Iterable
+from math import sqrt
 from typing import TypeVar
-from .pitch import OCTAVE
+from .pitch import OCTAVE, Interval
 from .scale import Scale, name_to_scale
 
 
@@ -40,3 +41,28 @@ major_scale_modes_by_name: OrderedDict[str, Scale] = OrderedDict(
         scale_modes(name_to_scale["Major"]),
     )
 )
+
+
+def scale_interval_diff(a: Scale, b: Scale) -> Iterable[tuple[int, Interval, Interval]]:
+    """Return a list of differences between two scales, as tuples of the degree
+    and intervals"""
+    for degree, aInterval in enumerate(a):
+        bInterval = b[degree]
+        if aInterval != bInterval:
+            yield (degree, aInterval, bInterval)
+
+
+def rank_sequences_by_closeness(
+    needle: list[int], haystack: list[list[int]]
+) -> list[list[int]]:
+    """Assume sorted!"""
+    return sorted(
+        haystack,
+        key=lambda sequence: sum(
+            map(lambda t: sqrt(abs(t[0] - t[1])), zip(needle, sequence))
+        ),
+        reverse=False,
+    )
+
+
+# TODO: convert to work with scales

@@ -1,6 +1,5 @@
 from music_tools.guitar import (
     EADGBE,
-    MEGA_FRETBOARD,
     T,
     FretboardAnnotation,
     FretboardLocation,
@@ -14,10 +13,9 @@ from music_tools.pitch import (
 )
 from music_tools.note import (
     Note,
-    n,
     note_parser,
 )
-from music_tools.scale import ConcreteScale, name_to_scale, scale_with_root
+from music_tools.scale import ConcreteScale
 from music_tools.mode import major_scale_modes_by_name
 
 # TODO: categorize each generated scale as mode of some parent scale

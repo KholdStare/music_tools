@@ -1,4 +1,8 @@
-from typing import Generic, Iterable, Protocol, TypeVar
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import IntEnum
+from typing import Callable, Generic, Iterable, Protocol, TypeVar, Sequence
 from typing_extensions import Self
 
 T = TypeVar("T")
@@ -6,6 +10,7 @@ T = TypeVar("T")
 
 class SequenceElement(Protocol):
     def __add__(self, x: Self, /) -> Self: ...
+    def __sub__(self, x: Self, /) -> Self: ...
     def __gt__(self, x: Self, /) -> Self: ...
 
 
@@ -13,6 +18,7 @@ S = TypeVar("S", bound=SequenceElement)
 
 
 def _transpose(matrix: Iterable[list[T]]) -> list[list[T]]:
+    """Transpose a matrix-like list of lists"""
     return list(map(list, zip(*matrix, strict=True)))
 
 
@@ -75,3 +81,88 @@ class SubsequenceSearcher(Generic[S]):
                 yield starting_index
             except ValueError:
                 continue
+
+
+class EditOpEnum(IntEnum):
+    Insert = 0
+    Delete = 1
+    Replace = 2
+
+
+@dataclass(frozen=True)
+class EditOp(Generic[T]):
+    left_value: T | None
+    """Left value being replaced/deleted"""
+    right_value: T | None
+    """Right value being inserted/replaced with"""
+    left_position: int
+    """position in left sequence where edit occurs"""
+
+
+EditCostFunction = Callable[[EditOp[T]], float]
+"""Cost function for an edit operation, used to rank edit paths. A cost of zero signifies no edit necessary"""
+
+
+@dataclass(frozen=True)
+class EditSequence(Generic[T]):
+    edits: tuple[EditOp[T], ...]
+    cost: float
+
+    @staticmethod
+    def make(
+        edits: Iterable[EditOp[T]], cost_func: EditCostFunction[T]
+    ) -> EditSequence[T]:
+        edits_tuple = tuple(edits)
+        return EditSequence(edits_tuple, sum(map(cost_func, edits_tuple)))
+
+    def append(
+        self, edit: EditOp[T], cost_func: EditCostFunction[T]
+    ) -> EditSequence[T]:
+        new_cost = cost_func(edit)
+        # if new edit doesn't cost anything, it's not an edit
+        if new_cost == 0.0:
+            return self
+        return EditSequence(self.edits + (edit,), self.cost + new_cost)
+
+
+@dataclass
+class LevenshteinEditMatrix(Generic[T]):
+    left: Sequence[T]
+    right: Sequence[T]
+    cost_func: EditCostFunction[T]
+    matrix: list[list[EditSequence[T]]] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.matrix = [[] for _l in self.left]
+
+        # precompute the matrix row by row
+        for left_pos in range(0, len(self.left)):
+            for right_pos in range(0, len(self.right)):
+                self.matrix[left_pos].append(self._calc_sequence(left_pos, right_pos))
+
+    def _calc_sequence(self, left_pos: int, right_pos: int) -> EditSequence[T]:
+        replace_seq = self.at(left_pos - 1, right_pos - 1)
+        replace_edit = EditOp(self.left[left_pos], self.right[right_pos], left_pos)
+        replace_seq = replace_seq.append(replace_edit, self.cost_func)
+
+        insert_seq = self.at(left_pos, right_pos - 1)
+        # TODO: the edit position here is questionable?
+        insert_edit = EditOp(None, self.right[right_pos], left_pos + 1)
+        insert_seq = insert_seq.append(insert_edit, self.cost_func)
+
+        delete_seq = self.at(left_pos - 1, right_pos)
+        delete_edit = EditOp(self.left[left_pos], None, left_pos)
+        delete_seq = delete_seq.append(delete_edit, self.cost_func)
+
+        return sorted((replace_seq, insert_seq, delete_seq), key=lambda seq: seq.cost)[
+            0
+        ]
+
+    def at(self, left_pos: int, right_pos: int) -> EditSequence[T]:
+        if left_pos < 0 or right_pos < 0:
+            return EditSequence(tuple(), 0)
+
+        return self.matrix[left_pos][right_pos]
+
+    def best_edit_sequence(self) -> EditSequence[T]:
+        return self.at(len(self.left) - 1, len(self.right) - 1)
