@@ -1,9 +1,9 @@
 from collections import OrderedDict
 from collections.abc import Iterable
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from music_tools.algorithms import (
-    EditSequence,
+    Edits,
     LevenshteinEditMatrix,
     rank_sequences_by_closeness,
 )
@@ -49,6 +49,11 @@ major_scale_modes_by_name: OrderedDict[str, Scale] = OrderedDict(
 
 
 def rank_scales_by_closeness(
-    scale: Scale, haystack: Iterable[Scale]
-) -> list[tuple[Scale, EditSequence[Interval]]]:
-    return rank_sequences_by_closeness(scale, haystack, _interval_cost)
+    scale: Scale, candidates: Iterable[Scale]
+) -> list[tuple[Scale, Edits[Interval]]]:
+    # Cast is necessary because can't express this properly in type system
+    # See https://github.com/python/mypy/issues/20293
+    return cast(
+        list[tuple[Scale, Edits[Interval]]],
+        rank_sequences_by_closeness(scale, candidates, _interval_cost),
+    )

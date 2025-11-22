@@ -3,7 +3,9 @@ from music_tools.algorithms import (
     EditOp,
     LevenshteinEditMatrix,
     SubsequenceSearcher,
-    EditSequence,
+    Edits,
+    rank_sequences_by_closeness,
+    without_edits,
 )
 from music_tools.pitch import (
     MAJOR_SEVENTH,
@@ -42,17 +44,13 @@ def test_levenshtein_strings() -> None:
         return 1 if edit.left_value != edit.right_value else 0
 
     matrix = LevenshteinEditMatrix[str](left, right, cost)
-    assert matrix.at(0, 0) == EditSequence((EditOp("h", "y", 0),), 1)
-    assert matrix.at(4, 5) == EditSequence(
-        (EditOp("h", "y", 0), EditOp(None, "w", 5)), 2
-    )
+    assert matrix.at(0, 0) == Edits((EditOp("h", "y", 0),), 1)
+    assert matrix.at(4, 5) == Edits((EditOp("h", "y", 0), EditOp(None, "w", 5)), 2)
     assert matrix.at(4, 5) == matrix.best_edit_sequence()
 
     matrix = LevenshteinEditMatrix[str](right, left, cost)
-    assert matrix.at(0, 0) == EditSequence((EditOp("y", "h", 0),), 1)
-    assert matrix.at(5, 4) == EditSequence(
-        (EditOp("y", "h", 0), EditOp("w", None, 5)), 2
-    )
+    assert matrix.at(0, 0) == Edits((EditOp("y", "h", 0),), 1)
+    assert matrix.at(5, 4) == Edits((EditOp("y", "h", 0), EditOp("w", None, 5)), 2)
     assert matrix.at(5, 4) == matrix.best_edit_sequence()
 
 
@@ -61,7 +59,7 @@ def test_levenshtein_major_to_minor() -> None:
     minor = name_to_scale["Minor"]
 
     matrix = LevenshteinEditMatrix[Interval](major, minor, _interval_cost)
-    assert matrix.best_edit_sequence() == EditSequence(
+    assert matrix.best_edit_sequence() == Edits(
         (
             EditOp(MAJOR_THIRD, MINOR_THIRD, 2),
             EditOp(MAJOR_SIXTH, MINOR_SIXTH, 5),
@@ -76,7 +74,69 @@ def test_levenshtein_minor_to_harmonic() -> None:
     harmonic = name_to_scale["Harmonic Minor"]
 
     matrix = LevenshteinEditMatrix[Interval](minor, harmonic, _interval_cost)
-    assert matrix.best_edit_sequence() == EditSequence(
+    assert matrix.best_edit_sequence() == Edits(
         (EditOp(MINOR_SEVENTH, MAJOR_SEVENTH, 6),),
         1,
     )
+
+
+def _test_cost(op: EditOp[int]) -> float:
+    return sqrt(abs((op.left_value or 0) - (op.right_value or 0)))
+
+
+def test_rank() -> None:
+    needle = [1, 4, 6, 8, 10]
+
+    haystack = [
+        [1, 4, 7, 8, 10],
+        [1, 3, 6, 9, 10],
+    ]
+
+    sorted_haystack = without_edits(
+        rank_sequences_by_closeness(needle, haystack, _test_cost)
+    )
+    assert sorted_haystack == haystack
+
+
+def test_rank_exact_match_and_near_match() -> None:
+    needle = [2, 4, 6]
+
+    haystack = [
+        [2, 4, 6],  # exact match → should rank first
+        [2, 4, 7],
+        [1, 4, 6],
+    ]
+
+    sorted_haystack = without_edits(
+        rank_sequences_by_closeness(needle, haystack, _test_cost)
+    )
+    assert sorted_haystack == haystack
+
+
+def test_rank_all_ties() -> None:
+    needle = [1, 1, 1]
+
+    haystack = [
+        [0, 1, 2],  # distance 1+0+1 = 2
+        [2, 1, 0],  # distance 1+0+1 = 2
+        [1, 0, 2],  # distance 0+1+1 = 2
+    ]
+
+    sorted_haystack = without_edits(
+        rank_sequences_by_closeness(needle, haystack, _test_cost)
+    )
+    assert sorted_haystack == haystack
+
+
+def test_rank_minor_differences_vs_one_big_one() -> None:
+    needle = [1, 1, 1]
+
+    haystack = [
+        [2, 2, 1],
+        [1, 1, 3],
+    ]
+
+    sorted_haystack = without_edits(
+        rank_sequences_by_closeness(needle, haystack, _test_cost)
+    )
+    assert sorted_haystack == list(reversed(haystack))

@@ -8,13 +8,12 @@ from typing_extensions import Self
 T = TypeVar("T")
 
 
-class SequenceElement(Protocol):
+class AddableComparable(Protocol):
     def __add__(self, x: Self, /) -> Self: ...
-    def __sub__(self, x: Self, /) -> Self: ...
     def __gt__(self, x: Self, /) -> Self: ...
 
 
-S = TypeVar("S", bound=SequenceElement)
+A = TypeVar("A", bound=AddableComparable)
 
 
 def _transpose(matrix: Iterable[list[T]]) -> list[list[T]]:
@@ -22,10 +21,10 @@ def _transpose(matrix: Iterable[list[T]]) -> list[list[T]]:
     return list(map(list, zip(*matrix, strict=True)))
 
 
-class SubsequenceSearcher(Generic[S]):
+class SubsequenceSearcher(Generic[A]):
     """Searches for subsequences in a circular sequence."""
 
-    def __init__(self, parent_sequence: Iterable[S]):
+    def __init__(self, parent_sequence: Iterable[A]):
         sequence_list = list(parent_sequence)
         sequence_length = len(sequence_list)
         sequence_sum = sum(sequence_list)  # type: ignore
@@ -63,7 +62,7 @@ class SubsequenceSearcher(Generic[S]):
 
         self.search_matrix = search_matrix
 
-    def find_subsequence_indices(self, subsequence: Iterable[S]) -> Iterable[int]:
+    def find_subsequence_indices(self, subsequence: Iterable[A]) -> Iterable[int]:
         subseq_list = tuple(subsequence)
         for starting_index, row in enumerate(self.search_matrix):
             current_index = starting_index
@@ -104,25 +103,21 @@ EditCostFunction = Callable[[EditOp[T]], float]
 
 
 @dataclass(frozen=True)
-class EditSequence(Generic[T]):
+class Edits(Generic[T]):
     edits: tuple[EditOp[T], ...]
     cost: float
 
     @staticmethod
-    def make(
-        edits: Iterable[EditOp[T]], cost_func: EditCostFunction[T]
-    ) -> EditSequence[T]:
+    def make(edits: Iterable[EditOp[T]], cost_func: EditCostFunction[T]) -> Edits[T]:
         edits_tuple = tuple(edits)
-        return EditSequence(edits_tuple, sum(map(cost_func, edits_tuple)))
+        return Edits(edits_tuple, sum(map(cost_func, edits_tuple)))
 
-    def append(
-        self, edit: EditOp[T], cost_func: EditCostFunction[T]
-    ) -> EditSequence[T]:
+    def append(self, edit: EditOp[T], cost_func: EditCostFunction[T]) -> Edits[T]:
         new_cost = cost_func(edit)
         # if new edit doesn't cost anything, it's not an edit
         if new_cost == 0.0:
             return self
-        return EditSequence(self.edits + (edit,), self.cost + new_cost)
+        return Edits(self.edits + (edit,), self.cost + new_cost)
 
 
 @dataclass
@@ -130,7 +125,7 @@ class LevenshteinEditMatrix(Generic[T]):
     left: Sequence[T]
     right: Sequence[T]
     cost_func: EditCostFunction[T]
-    matrix: list[list[EditSequence[T]]] = field(init=False)
+    matrix: list[list[Edits[T]]] = field(init=False)
 
     def __post_init__(self) -> None:
         self.matrix = [[] for _l in self.left]
@@ -140,7 +135,7 @@ class LevenshteinEditMatrix(Generic[T]):
             for right_pos in range(0, len(self.right)):
                 self.matrix[left_pos].append(self._calc_sequence(left_pos, right_pos))
 
-    def _calc_sequence(self, left_pos: int, right_pos: int) -> EditSequence[T]:
+    def _calc_sequence(self, left_pos: int, right_pos: int) -> Edits[T]:
         replace_seq = self.at(left_pos - 1, right_pos - 1)
         replace_edit = EditOp(self.left[left_pos], self.right[right_pos], left_pos)
         replace_seq = replace_seq.append(replace_edit, self.cost_func)
@@ -158,25 +153,31 @@ class LevenshteinEditMatrix(Generic[T]):
             0
         ]
 
-    def at(self, left_pos: int, right_pos: int) -> EditSequence[T]:
+    def at(self, left_pos: int, right_pos: int) -> Edits[T]:
         if left_pos < 0 or right_pos < 0:
-            return EditSequence(tuple(), 0)
+            return Edits(tuple(), 0)
 
         return self.matrix[left_pos][right_pos]
 
-    def best_edit_sequence(self) -> EditSequence[T]:
+    def best_edit_sequence(self) -> Edits[T]:
         return self.at(len(self.left) - 1, len(self.right) - 1)
 
 
-def rank_sequences_by_closeness(
-    needle: Sequence[T], haystack: Iterable[Sequence[T]], cost_func: EditCostFunction[T]
-) -> list[tuple[Sequence[T], EditSequence[T]]]:
+def rank_sequences_by_closeness[T](
+    needle: Sequence[T],
+    candidates: Iterable[Sequence[T]],
+    cost_func: EditCostFunction[T],
+) -> list[tuple[Sequence[T], Edits[T]]]:
     with_edit_sequences = [
         (
-            needle,
-            LevenshteinEditMatrix(needle, other, cost_func).best_edit_sequence(),
+            candidate,
+            LevenshteinEditMatrix(needle, candidate, cost_func).best_edit_sequence(),
         )
-        for other in haystack
+        for candidate in candidates
     ]
 
     return sorted(with_edit_sequences, key=lambda t: t[1].cost)
+
+
+def without_edits(ranked: list[tuple[Sequence[T], Edits[T]]]) -> list[Sequence[T]]:
+    return [t[0] for t in ranked]

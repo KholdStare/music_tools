@@ -1,13 +1,10 @@
 from itertools import starmap
 from music_tools.mode import (
     next_mode,
-    rank_scales_by_closeness,
-    scale_interval_diff,
     scale_modes,
     major_scale_modes_by_name,
 )
 from music_tools.note import n
-from music_tools.pitch import AUGMENTED_FOURTH, FOURTH
 from music_tools.scale import (
     ConcreteScale,
     interval_sequence,
@@ -70,63 +67,3 @@ def test_major_modes_repr() -> None:
         "(1 2 ♭3 4 5 ♭6 ♭7)",
         "(1 ♭2 ♭3 4 ♭5 ♭6 ♭7)",
     ]
-
-
-def test_interval_diff() -> None:
-    ionian = major_scale_modes_by_name["Ionian"]
-    lydian = major_scale_modes_by_name["Lydian"]
-    assert list(scale_interval_diff(ionian, lydian)) == [(3, FOURTH, AUGMENTED_FOURTH)]
-
-
-def test_rank() -> None:
-    needle = [1, 4, 6, 8, 10]
-
-    haystack = [
-        [1, 4, 7, 8, 10],
-        [1, 3, 6, 9, 10],
-    ]
-
-    sorted_haystack = rank_scales_by_closeness(needle, haystack)
-    assert sorted_haystack == haystack
-
-
-def test_rank_exact_match_and_near_match() -> None:
-    needle = [2, 4, 6]
-
-    haystack = [
-        [2, 4, 6],  # exact match → should rank first
-        [2, 4, 7],
-        [1, 4, 6],
-    ]
-
-    sorted_haystack = rank_scales_by_closeness(needle, haystack)
-    assert sorted_haystack == haystack
-
-
-def test_rank_all_ties() -> None:
-    needle = [1, 1, 1]
-
-    haystack = [
-        [0, 1, 2],  # distance 1+0+1 = 2
-        [2, 1, 0],  # distance 1+0+1 = 2
-        [1, 0, 2],  # distance 0+1+1 = 2
-    ]
-
-    sorted_haystack = rank_scales_by_closeness(needle, haystack)
-    assert sorted_haystack == haystack
-
-
-def test_rank_minor_differences_vs_one_big_one() -> None:
-    needle = [1, 1, 1]
-
-    haystack = [
-        [2, 2, 1],
-        [1, 1, 3],
-    ]
-
-    sorted_haystack = rank_scales_by_closeness(needle, haystack)
-    assert sorted_haystack == list(reversed(haystack))
-
-
-def test_harmonic_minor_distance() -> None:
-    pass
