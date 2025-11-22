@@ -2,6 +2,12 @@
 
 <head>
     <style>
+        :root {
+        --annot-color-0: lightsalmon;
+        --annot-color-1: lightgreen;
+        --annot-color-2: lightblue;
+        }
+
         fret-board {
             display: flex;
             flex-direction: column;
@@ -48,6 +54,8 @@
             align-items: center;
 
             annot {
+
+            /* font: "Arial Bold"; */
                 font-size: 0.7rem;
                 text-align: center;
                 background-color: lightblue;
@@ -56,6 +64,22 @@
                 padding: 0.5rem;
                 width: 0.6rem;
                 height: 0.6rem;
+
+                &[data-annot-layer="0"] {
+                    background-color: var(--annot-color-0);
+                }
+                &[data-annot-layer="1"] {
+                    background-color: var(--annot-color-1);
+                }
+                &[data-annot-layer="2"] {
+                    background-color: var(--annot-color-2);
+                }
+
+                &:hover {
+                    border-radius: 2px;
+                }
+
+                /* */
             }
 
             &::after {
@@ -98,6 +122,12 @@
                 [
                     [0, 5, "A"],
                     [1, 4, "Db"],
+                    [4, 10, "G"]
+                ],
+                [
+                    [3, 5, "G"],
+                    [2, 4, "F"],
+                    [2, 10, "C"],
                     [4, 10, "G"]
                 ]
             ]
