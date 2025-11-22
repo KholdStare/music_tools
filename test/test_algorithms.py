@@ -15,6 +15,7 @@ from music_tools.pitch import (
     Interval,
 )
 from music_tools.scale import (
+    _interval_cost,
     name_to_scale,
 )
 
@@ -55,19 +56,11 @@ def test_levenshtein_strings() -> None:
     assert matrix.at(5, 4) == matrix.best_edit_sequence()
 
 
-def interval_cost(edit: EditOp[Interval]) -> float:
-    if edit.left_value is None or edit.right_value is None:
-        distance = 12
-    else:
-        distance = abs(edit.left_value.half_steps - edit.right_value.half_steps)
-    return sqrt(distance)
-
-
 def test_levenshtein_major_to_minor() -> None:
     major = name_to_scale["Major"]
     minor = name_to_scale["Minor"]
 
-    matrix = LevenshteinEditMatrix[Interval](major, minor, interval_cost)
+    matrix = LevenshteinEditMatrix[Interval](major, minor, _interval_cost)
     assert matrix.best_edit_sequence() == EditSequence(
         (
             EditOp(MAJOR_THIRD, MINOR_THIRD, 2),
@@ -82,7 +75,7 @@ def test_levenshtein_minor_to_harmonic() -> None:
     minor = name_to_scale["Minor"]
     harmonic = name_to_scale["Harmonic Minor"]
 
-    matrix = LevenshteinEditMatrix[Interval](minor, harmonic, interval_cost)
+    matrix = LevenshteinEditMatrix[Interval](minor, harmonic, _interval_cost)
     assert matrix.best_edit_sequence() == EditSequence(
         (EditOp(MINOR_SEVENTH, MAJOR_SEVENTH, 6),),
         1,

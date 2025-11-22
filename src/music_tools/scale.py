@@ -1,8 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from itertools import chain
+from math import sqrt
 from typing import Iterable, Mapping, NewType
 from typing_extensions import Self
+
+from music_tools.algorithms import EditOp
 
 from .pitch import Interval
 from .note import (
@@ -136,3 +139,12 @@ def gen_conventional_scales() -> Iterable[Scale]:
         current_fragments = list(
             chain(*map(gen_scale_fragment_extensions, current_fragments))
         )
+
+
+def _interval_cost(edit: EditOp[Interval]) -> float:
+    """Cost of an edit operation for Levenshtein distance"""
+    if edit.left_value is None or edit.right_value is None:
+        distance = 12
+    else:
+        distance = abs(edit.left_value.half_steps - edit.right_value.half_steps)
+    return sqrt(distance)

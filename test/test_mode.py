@@ -1,7 +1,7 @@
 from itertools import starmap
 from music_tools.mode import (
     next_mode,
-    rank_sequences_by_closeness,
+    rank_scales_by_closeness,
     scale_interval_diff,
     scale_modes,
     major_scale_modes_by_name,
@@ -86,7 +86,7 @@ def test_rank() -> None:
         [1, 3, 6, 9, 10],
     ]
 
-    sorted_haystack = rank_sequences_by_closeness(needle, haystack)
+    sorted_haystack = rank_scales_by_closeness(needle, haystack)
     assert sorted_haystack == haystack
 
 
@@ -99,7 +99,7 @@ def test_rank_exact_match_and_near_match() -> None:
         [1, 4, 6],
     ]
 
-    sorted_haystack = rank_sequences_by_closeness(needle, haystack)
+    sorted_haystack = rank_scales_by_closeness(needle, haystack)
     assert sorted_haystack == haystack
 
 
@@ -112,7 +112,7 @@ def test_rank_all_ties() -> None:
         [1, 0, 2],  # distance 0+1+1 = 2
     ]
 
-    sorted_haystack = rank_sequences_by_closeness(needle, haystack)
+    sorted_haystack = rank_scales_by_closeness(needle, haystack)
     assert sorted_haystack == haystack
 
 
@@ -124,7 +124,7 @@ def test_rank_minor_differences_vs_one_big_one() -> None:
         [1, 1, 3],
     ]
 
-    sorted_haystack = rank_sequences_by_closeness(needle, haystack)
+    sorted_haystack = rank_scales_by_closeness(needle, haystack)
     assert sorted_haystack == list(reversed(haystack))
 
 

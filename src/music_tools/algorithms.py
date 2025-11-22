@@ -166,3 +166,17 @@ class LevenshteinEditMatrix(Generic[T]):
 
     def best_edit_sequence(self) -> EditSequence[T]:
         return self.at(len(self.left) - 1, len(self.right) - 1)
+
+
+def rank_sequences_by_closeness(
+    needle: Sequence[T], haystack: Iterable[Sequence[T]], cost_func: EditCostFunction[T]
+) -> list[tuple[Sequence[T], EditSequence[T]]]:
+    with_edit_sequences = [
+        (
+            needle,
+            LevenshteinEditMatrix(needle, other, cost_func).best_edit_sequence(),
+        )
+        for other in haystack
+    ]
+
+    return sorted(with_edit_sequences, key=lambda t: t[1].cost)
