@@ -122,6 +122,10 @@ class Edits(Generic[T]):
 
 @dataclass
 class LevenshteinEditMatrix(Generic[T]):
+    """Matrix that stores the edits and their cost, required to turn the `left`
+    sequence into the `right` sequence. The cost function can be custom, and not
+    just the standard Levenshtein distance"""
+
     left: Sequence[T]
     right: Sequence[T]
     cost_func: EditCostFunction[T]
@@ -164,14 +168,17 @@ class LevenshteinEditMatrix(Generic[T]):
 
 
 def rank_sequences_by_closeness[T](
-    needle: Sequence[T],
+    sequence: Sequence[T],
     candidates: Iterable[Sequence[T]],
     cost_func: EditCostFunction[T],
 ) -> list[tuple[Sequence[T], Edits[T]]]:
+    """Given a sequence and a set of other candidate sequences, rank them based
+    on how close each candidate is to the original sequence. Closeness is ranked
+    using Levenshtein edit distance, with a custom cost function for edits"""
     with_edit_sequences = [
         (
             candidate,
-            LevenshteinEditMatrix(needle, candidate, cost_func).best_edit_sequence(),
+            LevenshteinEditMatrix(sequence, candidate, cost_func).best_edit_sequence(),
         )
         for candidate in candidates
     ]

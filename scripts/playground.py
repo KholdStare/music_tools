@@ -17,6 +17,7 @@ from music_tools.note import (
 )
 from music_tools.scale import ConcreteScale
 from music_tools.mode import major_scale_modes_by_name
+from graphviz import Digraph  # type: ignore
 
 # TODO: categorize each generated scale as mode of some parent scale
 
@@ -118,5 +119,20 @@ def main() -> None:
     print(major_scale_modes_by_name)
 
 
+def visualize_modes() -> None:
+    dot = Digraph("Scales and Modes")
+
+    for mode_name, mode in major_scale_modes_by_name.items():
+        dot.node(mode_name, label=f"{mode_name}\n{mode}", shape="rect")
+
+    mode_names = list(major_scale_modes_by_name.keys())
+    for i, mode_name in enumerate(mode_names):
+        prev_mode_name = mode_names[i - 1]
+        dot.edge(prev_mode_name, mode_name, label="mode")
+
+    dot.render("modes.dot")
+
+
 if __name__ == "__main__":
     main()
+    visualize_modes()

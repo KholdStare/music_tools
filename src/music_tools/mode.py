@@ -4,7 +4,6 @@ from typing import TypeVar, cast
 
 from music_tools.algorithms import (
     Edits,
-    LevenshteinEditMatrix,
     rank_sequences_by_closeness,
 )
 from .pitch import OCTAVE, Interval
@@ -46,6 +45,8 @@ major_scale_modes_by_name: OrderedDict[str, Scale] = OrderedDict(
         scale_modes(name_to_scale["Major"]),
     )
 )
+
+# TODO: generate names for other modes relative to major modes
 
 
 def rank_scales_by_closeness(
