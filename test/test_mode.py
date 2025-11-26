@@ -1,10 +1,22 @@
 from itertools import starmap
+from music_tools.algorithms import EditOp, Edits
 from music_tools.mode import (
+    _edits_repr,
     next_mode,
     scale_modes,
     major_scale_modes_by_name,
 )
 from music_tools.note import n
+from music_tools.pitch import (
+    MAJOR_SECOND,
+    MAJOR_SEVENTH,
+    MAJOR_SIXTH,
+    MAJOR_THIRD,
+    MINOR_SEVENTH,
+    MINOR_SIXTH,
+    MINOR_THIRD,
+    Interval,
+)
 from music_tools.scale import (
     ConcreteScale,
     interval_sequence,
@@ -67,3 +79,51 @@ def test_major_modes_repr() -> None:
         "(1 2 ♭3 4 5 ♭6 ♭7)",
         "(1 ♭2 ♭3 4 ♭5 ♭6 ♭7)",
     ]
+
+
+class TestEditsRepr:
+    def test_no_edits(self) -> None:
+        edits: Edits[Interval] = Edits(tuple(), 0)
+        assert _edits_repr(edits) == ""
+
+    def test_replace_one_flat(self) -> None:
+        edits: Edits[Interval] = Edits(
+            (EditOp(MAJOR_THIRD, MINOR_THIRD, 2),),
+            0,
+        )
+        assert _edits_repr(edits) == "♭3"
+
+    def test_replace_one_natural(self) -> None:
+        edits: Edits[Interval] = Edits(
+            (EditOp(MINOR_THIRD, MAJOR_THIRD, 2),),
+            0,
+        )
+        assert _edits_repr(edits) == "♮3"
+
+    def test_replace_one_sharp(self) -> None:
+        edits: Edits[Interval] = Edits(
+            (EditOp(MAJOR_SECOND, MINOR_THIRD, 1),),
+            0,
+        )
+        assert _edits_repr(edits) == "♯2"
+
+    def test_replace_three(self) -> None:
+        edits: Edits[Interval] = Edits(
+            (
+                EditOp(MAJOR_THIRD, MINOR_THIRD, 2),
+                EditOp(MAJOR_SIXTH, MINOR_SIXTH, 5),
+                EditOp(MAJOR_SEVENTH, MINOR_SEVENTH, 6),
+            ),
+            0,
+        )
+        assert _edits_repr(edits) == "♭3 ♭6 ♭7"
+
+    def test_insert_remove(self) -> None:
+        edits: Edits[Interval] = Edits(
+            (
+                EditOp(None, MAJOR_THIRD, 2),
+                EditOp(MAJOR_SIXTH, None, 5),
+            ),
+            0,
+        )
+        assert _edits_repr(edits) == "+♮3 -♮6"

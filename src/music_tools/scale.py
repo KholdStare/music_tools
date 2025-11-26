@@ -2,8 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from itertools import chain
 from math import sqrt
-from typing import Iterable, Mapping, NewType
-from typing_extensions import Self
+from typing import Iterable, Mapping, NewType, Self
 
 from music_tools.algorithms import EditOp
 

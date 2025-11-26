@@ -46,12 +46,12 @@ def test_levenshtein_strings() -> None:
     matrix = LevenshteinEditMatrix[str](left, right, cost)
     assert matrix.at(0, 0) == Edits((EditOp("h", "y", 0),), 1)
     assert matrix.at(4, 5) == Edits((EditOp("h", "y", 0), EditOp(None, "w", 5)), 2)
-    assert matrix.at(4, 5) == matrix.best_edit_sequence()
+    assert matrix.at(4, 5) == matrix.best_edits()
 
     matrix = LevenshteinEditMatrix[str](right, left, cost)
     assert matrix.at(0, 0) == Edits((EditOp("y", "h", 0),), 1)
     assert matrix.at(5, 4) == Edits((EditOp("y", "h", 0), EditOp("w", None, 5)), 2)
-    assert matrix.at(5, 4) == matrix.best_edit_sequence()
+    assert matrix.at(5, 4) == matrix.best_edits()
 
 
 def test_levenshtein_major_to_minor() -> None:
@@ -59,7 +59,7 @@ def test_levenshtein_major_to_minor() -> None:
     minor = name_to_scale["Minor"]
 
     matrix = LevenshteinEditMatrix[Interval](major, minor, _interval_cost)
-    assert matrix.best_edit_sequence() == Edits(
+    assert matrix.best_edits() == Edits(
         (
             EditOp(MAJOR_THIRD, MINOR_THIRD, 2),
             EditOp(MAJOR_SIXTH, MINOR_SIXTH, 5),
@@ -74,7 +74,7 @@ def test_levenshtein_minor_to_harmonic() -> None:
     harmonic = name_to_scale["Harmonic Minor"]
 
     matrix = LevenshteinEditMatrix[Interval](minor, harmonic, _interval_cost)
-    assert matrix.best_edit_sequence() == Edits(
+    assert matrix.best_edits() == Edits(
         (EditOp(MINOR_SEVENTH, MAJOR_SEVENTH, 6),),
         1,
     )

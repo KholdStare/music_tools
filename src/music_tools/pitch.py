@@ -14,13 +14,15 @@ class Interval:
     def inside_octave(self) -> Interval:
         return Interval(self.half_steps % 12)
 
-    def scale_degree_repr(self, degree: int) -> str:
+    def scale_degree_repr(self, degree: int, *, include_natural: bool = False) -> str:
         """Representation of interval as a scale degree. E.g. #2 vs b3"""
         distance = self.half_steps - _natural_intervals[degree % 7].half_steps
         if distance > 0:
             accidentals = distance * "♯"
-        else:
+        elif distance < 0:
             accidentals = (-distance) * "♭"
+        else:
+            accidentals = "♮" if include_natural else ""
         return f"{accidentals}{degree + 1}"
 
     def __add__(self: Self, interval: Interval) -> Interval:

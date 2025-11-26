@@ -129,6 +129,8 @@ class LevenshteinEditMatrix(Generic[T]):
     left: Sequence[T]
     right: Sequence[T]
     cost_func: EditCostFunction[T]
+    left_offset: int = field(default=0)  # TODO: implement
+    """Offset of left sequence (as if all elements were rotated)"""
     matrix: list[list[Edits[T]]] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -137,25 +139,25 @@ class LevenshteinEditMatrix(Generic[T]):
         # precompute the matrix row by row
         for left_pos in range(0, len(self.left)):
             for right_pos in range(0, len(self.right)):
-                self.matrix[left_pos].append(self._calc_sequence(left_pos, right_pos))
+                self.matrix[left_pos].append(self._calc_edits(left_pos, right_pos))
 
-    def _calc_sequence(self, left_pos: int, right_pos: int) -> Edits[T]:
-        replace_seq = self.at(left_pos - 1, right_pos - 1)
+    def _calc_edits(self, left_pos: int, right_pos: int) -> Edits[T]:
+        replace_edits = self.at(left_pos - 1, right_pos - 1)
         replace_edit = EditOp(self.left[left_pos], self.right[right_pos], left_pos)
-        replace_seq = replace_seq.append(replace_edit, self.cost_func)
+        replace_edits = replace_edits.append(replace_edit, self.cost_func)
 
-        insert_seq = self.at(left_pos, right_pos - 1)
+        insert_edits = self.at(left_pos, right_pos - 1)
         # TODO: the edit position here is questionable?
         insert_edit = EditOp(None, self.right[right_pos], left_pos + 1)
-        insert_seq = insert_seq.append(insert_edit, self.cost_func)
+        insert_edits = insert_edits.append(insert_edit, self.cost_func)
 
-        delete_seq = self.at(left_pos - 1, right_pos)
+        delete_edits = self.at(left_pos - 1, right_pos)
         delete_edit = EditOp(self.left[left_pos], None, left_pos)
-        delete_seq = delete_seq.append(delete_edit, self.cost_func)
+        delete_edits = delete_edits.append(delete_edit, self.cost_func)
 
-        return sorted((replace_seq, insert_seq, delete_seq), key=lambda seq: seq.cost)[
-            0
-        ]
+        return sorted(
+            (replace_edits, insert_edits, delete_edits), key=lambda seq: seq.cost
+        )[0]
 
     def at(self, left_pos: int, right_pos: int) -> Edits[T]:
         if left_pos < 0 or right_pos < 0:
@@ -163,8 +165,14 @@ class LevenshteinEditMatrix(Generic[T]):
 
         return self.matrix[left_pos][right_pos]
 
-    def best_edit_sequence(self) -> Edits[T]:
+    def best_edits(self) -> Edits[T]:
         return self.at(len(self.left) - 1, len(self.right) - 1)
+
+
+def get_best_edits[T](
+    original: Sequence[T], target: Sequence[T], cost_func: EditCostFunction[T]
+) -> Edits[T]:
+    return LevenshteinEditMatrix[T](original, target, cost_func).best_edits()
 
 
 def rank_sequences_by_closeness[T](
@@ -178,7 +186,7 @@ def rank_sequences_by_closeness[T](
     with_edit_sequences = [
         (
             candidate,
-            LevenshteinEditMatrix(sequence, candidate, cost_func).best_edit_sequence(),
+            LevenshteinEditMatrix(sequence, candidate, cost_func).best_edits(),
         )
         for candidate in candidates
     ]
