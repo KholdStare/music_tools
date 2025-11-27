@@ -71,18 +71,24 @@ def _edits_repr(edits: Edits[Interval]) -> str:
     return " ".join(map(edit_repr, edits.edits))
 
 
+def generate_scale_name(reference_name: str, edits: Edits[Interval]) -> str:
+    # TODO: incorporate Dominant rule
+    if edits.cost == 0:
+        return reference_name
+    return f"{reference_name} {_edits_repr(edits)}"
+
+
 def generate_scale_names(
     scale: Scale, reference_scales: Mapping[Scale, str]
 ) -> Iterable[str]:
     """Given a scale, compute good names relative to a set of reference scales"""
     for reference, name in reference_scales.items():
         edits = get_best_edits(reference, scale, _interval_cost)
-        if edits.cost == 0:
-            yield name
         if edits.cost <= 1:
-            yield f"{name} {_edits_repr(edits)}"
+            yield generate_scale_name(name, edits)
 
 
+# TODO: better API in relation to reference scales
 @dataclass
 class ScaleRegistry:
     scale_by_name: dict[str, Scale] = field(default_factory=dict)
@@ -115,7 +121,23 @@ for name, scale in major_scale_modes_by_name.items():
 
 class ScaleRelationships:
     scale_registry: ScaleRegistry
+    # TODO: when modes are part of edits, things will be much simpler
     mode_relationships: set[tuple[Scale, Scale]]
+    edit_relationships: dict[tuple[Scale, Scale], Edits[Interval]]
+
+    # TODO: adjust when scale registry is properly initialized with reference scales?
+    def register_scale(self, name: str, scale: Scale) -> None:
+        # TODO: do this for every mode as well
+        self.scale_registry.register_scale(name, scale)
+
+        for reference, reference_name in self.scale_registry.reference_scales.items():
+            edits = get_best_edits(reference, scale, _interval_cost)
+            if reference == scale:
+                continue
+            if edits.cost <= 1:
+                alt_name = generate_scale_name(reference_name, edits)
+                self.scale_registry.register_scale(alt_name, scale)
+                self.edit_relationships[(reference, scale)] = edits
 
 
 # TODO: generate names for other modes relative to major modes

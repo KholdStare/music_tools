@@ -41,6 +41,9 @@ def test_scale_repr() -> None:
     assert str(_major_scale) == "(1 2 3 4 5 6 7)"
 
 
+# TODO: test other scale reprs, especially when less/more than 7 degrees
+
+
 class TestScaleFromIntervals:
     def test_major(self) -> None:
         major_intervals = interval_sequence([2, 2, 1, 2, 2, 2, 1])
