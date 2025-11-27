@@ -21,6 +21,24 @@ def _transpose(matrix: Iterable[list[T]]) -> list[list[T]]:
     return list(map(list, zip(*matrix, strict=True)))
 
 
+def zip_with_next[T](iterable: Iterable[T]) -> Iterable[tuple[T, T]]:
+    """Return a new iterable with pairs of (Nth, N+1th) elements from the
+    iterable, where the iterable is assumed to be circular, so the next element
+    of the last element is considered the first."""
+    it = iter(iterable)
+    try:
+        first = it.__next__()
+    except StopIteration:
+        return
+    prev = first
+
+    for elem in it:
+        yield (prev, elem)
+        prev = elem
+
+    yield (prev, first)
+
+
 class SubsequenceSearcher(Generic[A]):
     """Searches for subsequences in a circular sequence."""
 

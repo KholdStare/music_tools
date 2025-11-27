@@ -126,25 +126,33 @@ def main() -> None:
 def visualize_modes() -> None:
     dot = Digraph("Scales and Modes")
 
-    for mode_name, mode in major_scale_modes_by_name.items():
-        dot.node(mode_name, label=f"{mode_name}\n{mode}", shape="rect")
+    with dot.subgraph(name="cluster_major", graph_attr={"label": "Major"}) as s1:
+        for mode_name, mode in major_scale_modes_by_name.items():
+            s1.node(mode_name, label=f"{mode_name}\n{mode}", shape="rect")
 
-    mode_names = list(major_scale_modes_by_name.keys())
-    for i, mode_name in enumerate(mode_names):
-        prev_mode_name = mode_names[i - 1]
-        dot.edge(prev_mode_name, mode_name, label="mode")
+        mode_names = list(major_scale_modes_by_name.keys())
+        for i, mode_name in enumerate(mode_names):
+            prev_mode_name = mode_names[i - 1]
+            s1.edge(prev_mode_name, mode_name, label="mode")
 
-    # TODO: un brute-force
-    melodic_minor_modes = list(scale_modes(name_to_scale["Melodic Minor"]))
-    for mode in melodic_minor_modes:
-        names = generate_scale_names(
-            mode, {v: k for k, v in major_scale_modes_by_name.items()}
-        )
-        dot.node(str(mode), label=f"{'\n'.join(names)}\n{mode}", shape="rect")
+    def scale_cluster(name: str) -> None:
+        with dot.subgraph(name=f"cluster {name}", graph_attr={"label": name}) as s2:
+            # TODO: un brute-force
+            modes = list(scale_modes(name_to_scale[name]))
+            for mode in modes:
+                names = generate_scale_names(
+                    mode, {v: k for k, v in major_scale_modes_by_name.items()}
+                )
+                s2.node(str(mode), label=f"{'\n'.join(names)}\n{mode}", shape="rect")
 
-    for i, mode in enumerate(melodic_minor_modes):
-        prev_mode = melodic_minor_modes[i - 1]
-        dot.edge(str(prev_mode), str(mode), label="mode")
+            for i, mode in enumerate(modes):
+                prev_mode = modes[i - 1]
+                s2.edge(str(prev_mode), str(mode), label="mode")
+
+    for name in name_to_scale.keys():
+        if name == "Minor" or name == "Major":
+            continue
+        scale_cluster(name)
 
     dot.render("modes.dot")
 

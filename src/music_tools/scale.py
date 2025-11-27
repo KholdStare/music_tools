@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from itertools import chain
-from math import sqrt
+from math import sqrt, floor
 from typing import Iterable, Mapping, NewType, Self
 
 from music_tools.algorithms import EditOp
@@ -20,12 +20,38 @@ def interval_sequence(raw_intervals: Iterable[int]) -> IntervalSequence:
     return IntervalSequence(list(map(Interval, raw_intervals)))
 
 
+def _estimate_scale_degree(interval: Interval) -> int:
+    half_steps = interval.half_steps % 12
+    if half_steps > 5:
+        half_steps += 1
+    return floor((half_steps / 2) + 0.5)
+
+
 class Scale(tuple[Interval, ...]):
     """A scale is a sequence of Intervals relative to a root pitch."""
 
     def __repr__(self) -> str:
+        """Create a best-effort representation of scale degrees in the scale."""
+
+        # Saving this for future, if I think of something "more correct".
+        # Keeping it much more simple now
+        #
+        # too_many_or_too_few_scale_degrees = len(self) > 7 or len(self) < 6
+        # half_step_intervals = (
+        #     a.half_steps + 1 == b.half_steps for a, b in zip_with_next(self)
+        # )
+        # too_chromatic = any(a and b for a, b in zip_with_next(half_step_intervals))
+
+        if len(self) != 7:
+            degrees_and_intervals: Iterable[tuple[int, Interval]] = zip(
+                map(_estimate_scale_degree, self), self
+            )
+        else:
+            degrees_and_intervals = enumerate(self)
+
         intervals = " ".join(
-            interval.scale_degree_repr(degree) for degree, interval in enumerate(self)
+            interval.scale_degree_repr(degree)
+            for degree, interval in degrees_and_intervals
         )
         return f"({intervals})"
 

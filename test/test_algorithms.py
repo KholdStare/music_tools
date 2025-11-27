@@ -6,6 +6,7 @@ from music_tools.algorithms import (
     Edits,
     rank_sequences_by_closeness,
     without_edits,
+    zip_with_next,
 )
 from music_tools.pitch import (
     MAJOR_SEVENTH,
@@ -20,6 +21,20 @@ from music_tools.scale import (
     _interval_cost,
     name_to_scale,
 )
+
+
+class TestZipWithNext:
+    def test_empty(self) -> None:
+        result: list[tuple[int, int]] = list(zip_with_next([]))
+        assert result == []
+
+    def test_one(self) -> None:
+        result: list[tuple[int, int]] = list(zip_with_next([42]))
+        assert result == [(42, 42)]
+
+    def test_many(self) -> None:
+        result: list[tuple[int, int]] = list(zip_with_next(range(5)))
+        assert result == [(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)]
 
 
 def test_minor_pentatonic_in_major() -> None:
