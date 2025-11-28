@@ -1,13 +1,16 @@
 from collections import OrderedDict, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Mapping, cast
+from typing import Mapping, Sequence, cast
+
+from graphviz import Digraph  # type: ignore
 
 from music_tools.algorithms import (
     EditOp,
     Edits,
     get_best_edits,
     rank_sequences_by_closeness,
+    zip_with_next,
 )
 from .pitch import OCTAVE, Interval
 from .scale import Scale, name_to_scale, _interval_cost
@@ -91,53 +94,133 @@ def generate_scale_names(
 # TODO: better API in relation to reference scales
 @dataclass
 class ScaleRegistry:
-    scale_by_name: dict[str, Scale] = field(default_factory=dict)
-    names_by_scale: dict[Scale, list[str]] = field(
+    reference_scales: OrderedDict[str, Scale] = field(default_factory=OrderedDict)
+    """Canonical scales used to relate other scales to"""
+
+    scale_families: dict[str, list[Scale]] = field(
         default_factory=lambda: defaultdict(list)
     )
-    reference_scales: OrderedDict[Scale, str] = field(default_factory=OrderedDict)
-    """Scales used to related other scales to"""
+    """A family of scales (usually related by modes). The set of scales in each family is ordered"""
 
-    def register_scale(
-        self, name: str, scale: Scale, *, is_reference: bool = False
-    ) -> None:
-        self.scale_by_name[name] = scale
-        names = self.names_by_scale[scale]
-        if name not in names:
-            names.append(name)
+    def register_scale_family(self, family_name: str, scales: Iterable[Scale]) -> None:
+        existing_list = self.scale_families[family_name]
+        existing_set = set(existing_list)
+        for scale in scales:
+            if scale not in existing_set:
+                existing_list.append(scale)
 
-        if is_reference:
-            self.reference_scales[scale] = name
+    def register_reference_scale(self, name: str, scale: Scale) -> None:
+        self.reference_scales[name] = scale
+
+
+# 1 - register "starting scales"
+# 2 - compute all relationships, alternative names
+# 3 - render
 
 
 scale_registry = ScaleRegistry()
 
+# TODO: move all this to scales.py
 for name, scale in name_to_scale.items():
-    scale_registry.register_scale(name, scale)
+    if name == "Minor":
+        continue
+    scale_registry.register_scale_family(name, scale_modes(scale))
 
 for name, scale in major_scale_modes_by_name.items():
-    scale_registry.register_scale(name, scale, is_reference=True)
+    scale_registry.register_reference_scale(name, scale)
 
 
+@dataclass
 class ScaleRelationships:
     scale_registry: ScaleRegistry
+
     # TODO: when modes are part of edits, things will be much simpler
-    mode_relationships: set[tuple[Scale, Scale]]
-    edit_relationships: dict[tuple[Scale, Scale], Edits[Interval]]
 
-    # TODO: adjust when scale registry is properly initialized with reference scales?
-    def register_scale(self, name: str, scale: Scale) -> None:
-        # TODO: do this for every mode as well
-        self.scale_registry.register_scale(name, scale)
+    scale_to_family: dict[Scale, str] = field(default_factory=dict)
+    scale_names: dict[Scale, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    mode_relationships: dict[Scale, Scale] = field(default_factory=dict)
+    edit_relationships: dict[tuple[Scale, Scale], Edits[Interval]] = field(
+        default_factory=dict
+    )
 
-        for reference, reference_name in self.scale_registry.reference_scales.items():
+    def __post_init__(self) -> None:
+        all_scales: set[Scale] = set()
+
+        # TODO: get rid of assumptions on modes
+        for family_name, scales in self.scale_registry.scale_families.items():
+            self._process_family(family_name, scales)
+            all_scales.update(scales)
+
+        # Reference names always come first
+        for name, scale in self.scale_registry.reference_scales.items():
+            self.scale_names[scale].append(name)
+
+        for scale in all_scales:
+            self._process_scale(scale)
+
+        # TODO: find best "reference" in each family to every other
+
+    def _process_family(self, family_name: str, scales: Sequence[Scale]) -> None:
+        for scale in scales:
+            self.scale_to_family[scale] = family_name
+        modes = list(scale_modes(scales[0]))
+        for a, b in zip_with_next(modes):
+            self.mode_relationships[a] = b
+
+    def _process_scale(self, scale: Scale) -> None:
+        # If a scale is a reference scale, don't need compare it to other reference scales
+        if scale in self.scale_registry.reference_scales.values():
+            return
+
+        for reference_name, reference in self.scale_registry.reference_scales.items():
             edits = get_best_edits(reference, scale, _interval_cost)
             if reference == scale:
                 continue
             if edits.cost <= 1:
                 alt_name = generate_scale_name(reference_name, edits)
-                self.scale_registry.register_scale(alt_name, scale)
+                self.scale_names[scale].append(alt_name)
                 self.edit_relationships[(reference, scale)] = edits
+
+    def generate_dot(self) -> Digraph:
+        dot = Digraph("Scales and Modes", graph_attr={"ranksep": "equally"})
+
+        def family_cluster(name: str, scales: list[Scale]) -> None:
+            with dot.subgraph(
+                name=f"cluster {name}",
+                graph_attr={"label": name},
+                edge_attr={"weight": "10"},
+            ) as s:
+                for i, scale in enumerate(scales):
+                    names = self.scale_names[scale]
+                    s.node(
+                        str(scale),
+                        label=f"{'\n'.join(names)}\n{scale}",
+                        shape="rect",
+                        rank=str(i),
+                    )
+
+                # mode edges in family
+                for scale in scales:
+                    mode = self.mode_relationships[scale]
+                    s.edge(str(scale), str(mode), label="mode")
+
+        # draw clusters
+        for family_name, scales in self.scale_registry.scale_families.items():
+            family_cluster(family_name, scales)
+
+        # draw edits
+        for (a, b), edits in self.edit_relationships.items():
+            dot.edge(
+                str(a),
+                str(b),
+                label=_edits_repr(edits),
+                style="dotted",
+                # constraint="false",
+            )
+
+        return dot
 
 
 # TODO: generate names for other modes relative to major modes
